@@ -1,0 +1,12 @@
+build*/
+third_party/flash-attention/
+third_party/cudnn-frontend/
+third_party/pytorch/
+third_party/cutlass-pt/
+third_party/stb/
+third_party/CuMesh/
+third_party/torch-cpu/
+third_party/FlexGEMM/
+third_party/nvdiffrast/
+third_party/libwebp/
+*.lock

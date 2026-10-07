@@ -1,0 +1,2391 @@
+{
+    "NVIDIA H200": {
+        "flex_gemm.kernels.triton.grid_sample.indice_weighed_sum_bwd.indice_weighed_sum_bwd_input_kernel": {},
+        "flex_gemm.kernels.triton.grid_sample.indice_weighed_sum_fwd.indice_weighed_sum_fwd_kernel": {
+            "(22, 6984354, 6, 8, 'torch.float32', 'torch.uint32', 'torch.float32', 'torch.float32')": {
+                "kwargs": {
+                    "BM": 16,
+                    "BK": 8
+                },
+                "num_warps": 2,
+                "num_ctas": 1,
+                "num_stages": 2,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(23, 6777418, 6, 8, 'torch.float32', 'torch.uint32', 'torch.float32', 'torch.float32')": {
+                "kwargs": {
+                    "BM": 16,
+                    "BK": 8
+                },
+                "num_warps": 2,
+                "num_ctas": 1,
+                "num_stages": 2,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(22, 9219144, 6, 8, 'torch.float32', 'torch.uint32', 'torch.float32', 'torch.float32')": {
+                "kwargs": {
+                    "BM": 16,
+                    "BK": 8
+                },
+                "num_warps": 2,
+                "num_ctas": 1,
+                "num_stages": 2,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(20, 5571804, 6, 8, 'torch.float32', 'torch.uint32', 'torch.float32', 'torch.float32')": {
+                "kwargs": {
+                    "BM": 16,
+                    "BK": 8
+                },
+                "num_warps": 2,
+                "num_ctas": 1,
+                "num_stages": 2,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(22, 7998419, 6, 8, 'torch.float32', 'torch.uint32', 'torch.float32', 'torch.float32')": {
+                "kwargs": {
+                    "BM": 16,
+                    "BK": 8
+                },
+                "num_warps": 2,
+                "num_ctas": 1,
+                "num_stages": 2,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            }
+        },
+        "flex_gemm.kernels.triton.spconv.sparse_conv_implicit_gemm.sparse_conv_fwd_implicit_gemm_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_conv_implicit_gemm.sparse_conv_bwd_weight_implicit_gemm_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_conv_implicit_gemm_splitk.sparse_conv_fwd_implicit_gemm_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_conv_implicit_gemm_splitk.sparse_conv_bwd_weight_implicit_gemm_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_conv_implicit_gemm_splitk.sparse_conv_fwd_implicit_gemm_splitk_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_conv_implicit_gemm_splitk.sparse_conv_bwd_weight_implicit_gemm_splitk_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_conv_implicit_gemm_splitk.sparse_conv_fwd_implicit_gemm_splitk": {},
+        "flex_gemm.kernels.triton.spconv.sparse_conv_implicit_gemm_splitk.sparse_conv_bwd_weight_implicit_gemm_splitk": {},
+        "flex_gemm.kernels.triton.spconv.sparse_conv_masked_implicit_gemm.sparse_conv_fwd_implicit_gemm_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_conv_masked_implicit_gemm.sparse_conv_fwd_masked_implicit_gemm_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_conv_masked_implicit_gemm.sparse_conv_bwd_weight_masked_implicit_gemm_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_conv_masked_implicit_gemm_splitk.sparse_conv_fwd_implicit_gemm_splitk": {},
+        "flex_gemm.kernels.triton.spconv.sparse_conv_masked_implicit_gemm_splitk.sparse_conv_fwd_masked_implicit_gemm_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_conv_masked_implicit_gemm_splitk.sparse_conv_bwd_weight_masked_implicit_gemm_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_conv_masked_implicit_gemm_splitk.sparse_conv_fwd_masked_implicit_gemm_splitk_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_conv_masked_implicit_gemm_splitk.sparse_conv_bwd_weight_masked_implicit_gemm_splitk_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_conv_masked_implicit_gemm_splitk.sparse_conv_fwd_masked_implicit_gemm_splitk": {},
+        "flex_gemm.kernels.triton.spconv.sparse_conv_masked_implicit_gemm_splitk.sparse_conv_bwd_weight_masked_implicit_gemm_splitk": {},
+        "flex_gemm.kernels.triton.spconv.sparse_submanifold_conv_bwd_implicit_gemm.sparse_submanifold_conv_bwd_input_implicit_gemm_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_submanifold_conv_bwd_implicit_gemm.sparse_submanifold_conv_bwd_weight_implicit_gemm_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_submanifold_conv_bwd_implicit_gemm_splitk.sparse_submanifold_conv_bwd_input_implicit_gemm_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_submanifold_conv_bwd_implicit_gemm_splitk.sparse_submanifold_conv_bwd_weight_implicit_gemm_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_submanifold_conv_bwd_implicit_gemm_splitk.sparse_submanifold_conv_bwd_input_implicit_gemm_splitk_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_submanifold_conv_bwd_implicit_gemm_splitk.sparse_submanifold_conv_bwd_weight_implicit_gemm_splitk_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_submanifold_conv_bwd_implicit_gemm_splitk.sparse_submanifold_conv_bwd_input_implicit_gemm_splitk": {},
+        "flex_gemm.kernels.triton.spconv.sparse_submanifold_conv_bwd_implicit_gemm_splitk.sparse_submanifold_conv_bwd_weight_implicit_gemm_splitk": {},
+        "flex_gemm.kernels.triton.spconv.sparse_submanifold_conv_bwd_masked_implicit_gemm.sparse_submanifold_conv_bwd_input_masked_implicit_gemm_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_submanifold_conv_bwd_masked_implicit_gemm.sparse_submanifold_conv_bwd_weight_masked_implicit_gemm_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_submanifold_conv_bwd_masked_implicit_gemm_splitk.sparse_submanifold_conv_bwd_input_masked_implicit_gemm_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_submanifold_conv_bwd_masked_implicit_gemm_splitk.sparse_submanifold_conv_bwd_weight_masked_implicit_gemm_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_submanifold_conv_bwd_masked_implicit_gemm_splitk.sparse_submanifold_conv_bwd_input_masked_implicit_gemm_splitk_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_submanifold_conv_bwd_masked_implicit_gemm_splitk.sparse_submanifold_conv_bwd_weight_masked_implicit_gemm_splitk_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_submanifold_conv_bwd_masked_implicit_gemm_splitk.sparse_submanifold_conv_bwd_input_masked_implicit_gemm_splitk": {},
+        "flex_gemm.kernels.triton.spconv.sparse_submanifold_conv_bwd_masked_implicit_gemm_splitk.sparse_submanifold_conv_bwd_weight_masked_implicit_gemm_splitk": {},
+        "flex_gemm.kernels.triton.spconv.sparse_submanifold_conv_fwd_implicit_gemm.sparse_submanifold_conv_fwd_implicit_gemm_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_submanifold_conv_fwd_implicit_gemm_splitk.sparse_submanifold_conv_fwd_implicit_gemm_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_submanifold_conv_fwd_implicit_gemm_splitk.sparse_submanifold_conv_fwd_implicit_gemm_splitk_kernel": {},
+        "flex_gemm.kernels.triton.spconv.sparse_submanifold_conv_fwd_implicit_gemm_splitk.sparse_submanifold_conv_fwd_implicit_gemm_splitk": {},
+        "flex_gemm.kernels.triton.spconv.sparse_submanifold_conv_fwd_masked_implicit_gemm.sparse_submanifold_conv_fwd_masked_implicit_gemm_kernel": {
+            "(11, 1024, 1024, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(11, 1024, 4096, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(13, 512, 512, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(13, 512, 2048, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(15, 256, 256, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(15, 256, 1024, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(18, 128, 128, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 64,
+                    "B2": 128,
+                    "BK": 32
+                },
+                "num_warps": 4,
+                "num_ctas": 1,
+                "num_stages": 4,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(18, 128, 512, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(20, 64, 64, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 64,
+                    "BK": 32
+                },
+                "num_warps": 4,
+                "num_ctas": 1,
+                "num_stages": 4,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(13, 1024, 1024, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(13, 1024, 4096, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(15, 512, 512, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(15, 512, 2048, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(18, 256, 256, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(18, 256, 1024, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(20, 128, 128, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 64,
+                    "B2": 128,
+                    "BK": 32
+                },
+                "num_warps": 4,
+                "num_ctas": 1,
+                "num_stages": 4,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(20, 128, 512, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(22, 64, 64, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 64,
+                    "BK": 32
+                },
+                "num_warps": 4,
+                "num_ctas": 1,
+                "num_stages": 4,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(12, 1024, 1024, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(12, 1024, 4096, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(14, 512, 512, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(14, 512, 2048, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(16, 256, 256, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(16, 256, 1024, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(19, 128, 128, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 64,
+                    "B2": 128,
+                    "BK": 32
+                },
+                "num_warps": 4,
+                "num_ctas": 1,
+                "num_stages": 4,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(19, 128, 512, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(21, 64, 64, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 64,
+                    "BK": 32
+                },
+                "num_warps": 4,
+                "num_ctas": 1,
+                "num_stages": 4,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(14, 1024, 1024, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(14, 1024, 4096, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(16, 512, 512, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(16, 512, 2048, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(19, 256, 256, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(19, 256, 1024, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(21, 128, 128, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 64,
+                    "B2": 128,
+                    "BK": 32
+                },
+                "num_warps": 4,
+                "num_ctas": 1,
+                "num_stages": 4,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(21, 128, 512, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(23, 64, 64, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 64,
+                    "BK": 32
+                },
+                "num_warps": 4,
+                "num_ctas": 1,
+                "num_stages": 4,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(10, 1024, 1024, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 32,
+                    "B2": 64,
+                    "BK": 32
+                },
+                "num_warps": 2,
+                "num_ctas": 1,
+                "num_stages": 5,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(10, 1024, 4096, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(12, 512, 512, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(12, 512, 2048, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(14, 256, 256, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(14, 256, 1024, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(16, 128, 128, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 64,
+                    "B2": 128,
+                    "BK": 32
+                },
+                "num_warps": 4,
+                "num_ctas": 1,
+                "num_stages": 4,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(16, 128, 512, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(18, 64, 64, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 64,
+                    "BK": 32
+                },
+                "num_warps": 4,
+                "num_ctas": 1,
+                "num_stages": 4,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            }
+        },
+        "flex_gemm.kernels.triton.spconv.sparse_submanifold_conv_fwd_masked_implicit_gemm_splitk.sparse_submanifold_conv_fwd_masked_implicit_gemm_kernel": {
+            "(11, 1024, 1024, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(11, 1024, 4096, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(13, 512, 512, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(13, 512, 2048, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(15, 256, 256, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(15, 256, 1024, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(18, 128, 128, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 64,
+                    "B2": 128,
+                    "BK": 32
+                },
+                "num_warps": 4,
+                "num_ctas": 1,
+                "num_stages": 4,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(18, 128, 512, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(20, 64, 64, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 64,
+                    "BK": 32
+                },
+                "num_warps": 4,
+                "num_ctas": 1,
+                "num_stages": 4,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(13, 1024, 1024, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(13, 1024, 4096, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(15, 512, 512, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(15, 512, 2048, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(18, 256, 256, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(18, 256, 1024, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(20, 128, 128, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 64,
+                    "B2": 128,
+                    "BK": 32
+                },
+                "num_warps": 4,
+                "num_ctas": 1,
+                "num_stages": 4,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(20, 128, 512, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(22, 64, 64, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 64,
+                    "BK": 32
+                },
+                "num_warps": 4,
+                "num_ctas": 1,
+                "num_stages": 4,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(12, 1024, 1024, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(12, 1024, 4096, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(14, 512, 512, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(14, 512, 2048, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(16, 256, 256, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(16, 256, 1024, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(19, 128, 128, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 64,
+                    "B2": 128,
+                    "BK": 32
+                },
+                "num_warps": 4,
+                "num_ctas": 1,
+                "num_stages": 4,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(19, 128, 512, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(21, 64, 64, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 64,
+                    "BK": 32
+                },
+                "num_warps": 4,
+                "num_ctas": 1,
+                "num_stages": 4,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(14, 1024, 1024, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(14, 1024, 4096, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(16, 512, 512, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(16, 512, 2048, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(19, 256, 256, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(19, 256, 1024, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(21, 128, 128, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 64,
+                    "B2": 128,
+                    "BK": 32
+                },
+                "num_warps": 4,
+                "num_ctas": 1,
+                "num_stages": 4,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(21, 128, 512, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(23, 64, 64, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 64,
+                    "BK": 32
+                },
+                "num_warps": 4,
+                "num_ctas": 1,
+                "num_stages": 4,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(10, 1024, 1024, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 32,
+                    "B2": 64,
+                    "BK": 32
+                },
+                "num_warps": 2,
+                "num_ctas": 1,
+                "num_stages": 5,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(10, 1024, 4096, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(12, 512, 512, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(12, 512, 2048, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(14, 256, 256, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(14, 256, 1024, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(16, 128, 128, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 64,
+                    "B2": 128,
+                    "BK": 32
+                },
+                "num_warps": 4,
+                "num_ctas": 1,
+                "num_stages": 4,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(16, 128, 512, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(18, 64, 64, 27, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float16')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 64,
+                    "BK": 32
+                },
+                "num_warps": 4,
+                "num_ctas": 1,
+                "num_stages": 4,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            }
+        },
+        "flex_gemm.kernels.triton.spconv.sparse_submanifold_conv_fwd_masked_implicit_gemm_splitk.sparse_submanifold_conv_fwd_masked_implicit_gemm_splitk_kernel": {
+            "(11, 1024, 1024, 27, 2, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(11, 1024, 1024, 27, 4, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(11, 1024, 1024, 27, 8, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(11, 1024, 1024, 27, 16, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(11, 1024, 4096, 27, 2, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(11, 1024, 4096, 27, 4, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(13, 512, 512, 27, 2, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(13, 512, 512, 27, 4, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(13, 512, 512, 27, 8, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(13, 512, 2048, 27, 2, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(15, 256, 256, 27, 2, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(15, 256, 256, 27, 4, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(13, 1024, 1024, 27, 2, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(13, 1024, 1024, 27, 4, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(15, 512, 512, 27, 2, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(12, 1024, 1024, 27, 2, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(12, 1024, 1024, 27, 4, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(12, 1024, 1024, 27, 8, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(12, 1024, 4096, 27, 2, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(14, 512, 512, 27, 2, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(14, 512, 512, 27, 4, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(16, 256, 256, 27, 2, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(14, 1024, 1024, 27, 2, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(10, 1024, 1024, 27, 2, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(10, 1024, 1024, 27, 4, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(10, 1024, 1024, 27, 8, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(10, 1024, 1024, 27, 16, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(10, 1024, 1024, 27, 32, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(10, 1024, 4096, 27, 2, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(10, 1024, 4096, 27, 4, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(10, 1024, 4096, 27, 8, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(12, 512, 512, 27, 2, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(12, 512, 512, 27, 4, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(12, 512, 512, 27, 8, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(12, 512, 512, 27, 16, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(12, 512, 2048, 27, 2, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(12, 512, 2048, 27, 4, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(14, 256, 256, 27, 2, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(14, 256, 256, 27, 4, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(14, 256, 256, 27, 8, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(14, 256, 1024, 27, 2, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 256,
+                    "BK": 64
+                },
+                "num_warps": 8,
+                "num_ctas": 1,
+                "num_stages": 3,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(16, 128, 128, 27, 2, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 128,
+                    "BK": 32
+                },
+                "num_warps": 4,
+                "num_ctas": 1,
+                "num_stages": 4,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            },
+            "(16, 128, 128, 27, 4, True, 'torch.float16', 'torch.float16', 'torch.float16', 'torch.uint32', 'torch.int64', 'torch.float32')": {
+                "kwargs": {
+                    "B1": 128,
+                    "B2": 64,
+                    "BK": 32
+                },
+                "num_warps": 4,
+                "num_ctas": 1,
+                "num_stages": 4,
+                "num_buffers_warp_spec": 0,
+                "num_consumer_groups": 0,
+                "reg_dec_producer": 0,
+                "reg_inc_consumer": 0,
+                "maxnreg": null,
+                "pre_hook": null
+            }
+        },
+        "flex_gemm.kernels.triton.spconv.sparse_submanifold_conv_fwd_masked_implicit_gemm_splitk.sparse_submanifold_conv_fwd_masked_implicit_gemm_splitk": {
+            "(2^11, 1024, 1024, 27)": {
+                "SPLITK": 8
+            },
+            "(2^11, 1024, 4096, 27)": {
+                "SPLITK": 4
+            },
+            "(2^13, 512, 512, 27)": {
+                "SPLITK": 1
+            },
+            "(2^13, 512, 2048, 27)": {
+                "SPLITK": 2
+            },
+            "(2^15, 256, 256, 27)": {
+                "SPLITK": 1
+            },
+            "(2^15, 256, 1024, 27)": {
+                "SPLITK": 1
+            },
+            "(2^18, 128, 128, 27)": {
+                "SPLITK": 1
+            },
+            "(2^18, 128, 512, 27)": {
+                "SPLITK": 1
+            },
+            "(2^20, 64, 64, 27)": {
+                "SPLITK": 1
+            },
+            "(2^13, 1024, 1024, 27)": {
+                "SPLITK": 4
+            },
+            "(2^13, 1024, 4096, 27)": {
+                "SPLITK": 1
+            },
+            "(2^15, 512, 512, 27)": {
+                "SPLITK": 1
+            },
+            "(2^15, 512, 2048, 27)": {
+                "SPLITK": 1
+            },
+            "(2^18, 256, 256, 27)": {
+                "SPLITK": 1
+            },
+            "(2^18, 256, 1024, 27)": {
+                "SPLITK": 1
+            },
+            "(2^20, 128, 128, 27)": {
+                "SPLITK": 1
+            },
+            "(2^20, 128, 512, 27)": {
+                "SPLITK": 1
+            },
+            "(2^22, 64, 64, 27)": {
+                "SPLITK": 1
+            },
+            "(2^12, 1024, 1024, 27)": {
+                "SPLITK": 8
+            },
+            "(2^12, 1024, 4096, 27)": {
+                "SPLITK": 2
+            },
+            "(2^14, 512, 512, 27)": {
+                "SPLITK": 2
+            },
+            "(2^14, 512, 2048, 27)": {
+                "SPLITK": 1
+            },
+            "(2^16, 256, 256, 27)": {
+                "SPLITK": 1
+            },
+            "(2^16, 256, 1024, 27)": {
+                "SPLITK": 1
+            },
+            "(2^19, 128, 128, 27)": {
+                "SPLITK": 1
+            },
+            "(2^19, 128, 512, 27)": {
+                "SPLITK": 1
+            },
+            "(2^21, 64, 64, 27)": {
+                "SPLITK": 1
+            },
+            "(2^14, 1024, 1024, 27)": {
+                "SPLITK": 2
+            },
+            "(2^14, 1024, 4096, 27)": {
+                "SPLITK": 1
+            },
+            "(2^16, 512, 512, 27)": {
+                "SPLITK": 1
+            },
+            "(2^16, 512, 2048, 27)": {
+                "SPLITK": 1
+            },
+            "(2^19, 256, 256, 27)": {
+                "SPLITK": 1
+            },
+            "(2^19, 256, 1024, 27)": {
+                "SPLITK": 1
+            },
+            "(2^21, 128, 128, 27)": {
+                "SPLITK": 1
+            },
+            "(2^21, 128, 512, 27)": {
+                "SPLITK": 1
+            },
+            "(2^23, 64, 64, 27)": {
+                "SPLITK": 1
+            },
+            "(2^10, 1024, 1024, 27)": {
+                "SPLITK": 8
+            },
+            "(2^10, 1024, 4096, 27)": {
+                "SPLITK": 8
+            },
+            "(2^12, 512, 512, 27)": {
+                "SPLITK": 1
+            },
+            "(2^12, 512, 2048, 27)": {
+                "SPLITK": 2
+            },
+            "(2^14, 256, 256, 27)": {
+                "SPLITK": 1
+            },
+            "(2^14, 256, 1024, 27)": {
+                "SPLITK": 1
+            },
+            "(2^16, 128, 128, 27)": {
+                "SPLITK": 1
+            },
+            "(2^16, 128, 512, 27)": {
+                "SPLITK": 1
+            },
+            "(2^18, 64, 64, 27)": {
+                "SPLITK": 1
+            }
+        }
+    }
+}
