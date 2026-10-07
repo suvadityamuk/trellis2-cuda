@@ -1,0 +1,21 @@
+trellis2-cuda
+Copyright 2026 Suvaditya Mukherjee
+
+This product includes software derived from the following projects:
+
+- OpenCV (https://github.com/opencv/opencv), Apache License 2.0: src/inpaint.cpp is a port of
+  modules/photo/src/inpaint.cpp (INPAINT_TELEA), and the TELEA weighting in src/glb.cu and
+  hub/trellis2-kernels/trellis2_cuda/telea.cu follows it.
+- FlexGEMM (https://github.com/JeffreyXiang/FlexGEMM), MIT License: src/spconv.cu re-implements its
+  masked implicit-GEMM submanifold convolution.
+- TRELLIS.2 (https://github.com/microsoft/TRELLIS.2), MIT License: the pipeline, model architectures and
+  post-processing reproduced by this project.
+
+- nvdiffrast (https://github.com/NVlabs/nvdiffrast), NVIDIA Source Code License (non-commercial): src/nvdr.cpp
+  replaces its PyTorch glue for rasterize/interpolate and follows that code.
+
+Third-party sources fetched by tools/build.sh (flash-attention, CuMesh, cuBVH, xatlas, FlexGEMM, nvdiffrast,
+cudnn-frontend, cutlass, PyTorch, libwebp, stb) are not redistributed here and remain under their own licenses.
+Note that nvdiffrast and parts of cuBVH are under NVIDIA's non-commercial source code license, so binaries built
+from this repository (build/t2, build/parity) are subject to those terms. The Hub kernels in hub/trellis2-kernels
+do not use either.

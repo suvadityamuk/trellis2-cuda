@@ -1,0 +1,24 @@
+[general]
+name = "trellis2-kernels"
+version = 1
+edition = 6
+license = "Apache-2.0"
+backends = ["cuda"]
+source = "https://github.com/suvadityamuk/trellis2-cuda"
+
+[general.hub]
+repo-id = "suvadityamuk/trellis2-kernels"
+
+[torch]
+src = [
+    "torch-ext/torch_binding.cpp",
+    "torch-ext/torch_binding.h",
+]
+
+[kernel.mesh]
+language = "cpp-cuda"
+depends = ["torch"]
+src = [
+    "trellis2_cuda/lbvh.cu",
+    "trellis2_cuda/telea.cu",
+]
