@@ -7,7 +7,7 @@ import threading
 
 import gradio as gr
 import numpy as np
-import torch  # also installs the CUDA 12 runtime, cuBLAS and cuDNN that libt2.so links against)
+import torch  # also installs the CUDA 12 runtime, cuBLAS and cuDNN that libt2.so links against
 from huggingface_hub import hf_hub_download
 from PIL import Image
 from rembg import new_session, remove
