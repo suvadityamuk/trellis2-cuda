@@ -7,7 +7,7 @@ import threading
 
 import gradio as gr
 import numpy as np
-import torch  # noqa: F401  (installs the CUDA 12 runtime, cuBLAS and cuDNN that libt2.so links against)
+import torch  # also installs the CUDA 12 runtime, cuBLAS and cuDNN that libt2.so links against)
 from huggingface_hub import hf_hub_download
 from PIL import Image
 from rembg import new_session, remove
@@ -61,6 +61,8 @@ def gpu_seconds(img, seed, faces, texture):
 
 @spaces.GPU(duration=gpu_seconds)
 def image_to_glb(img: Image.Image, seed: int, faces: int, texture: int):
+    if not torch.cuda.is_available():
+        raise gr.Error("No GPU attached: this Space must run on ZeroGPU (or another NVIDIA GPU) hardware.")
     out = tempfile.NamedTemporaryFile(suffix=".glb", delete=False).name
     times, nv, nf = model().image_to_glb(np.asarray(img), out, seed=seed, faces=faces, texture=texture)
     return out, times, nv, nf
