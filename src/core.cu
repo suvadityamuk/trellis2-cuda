@@ -1,9 +1,18 @@
 #include "core.h"
 #include <chrono>
+#include <cstdarg>
+#include <stdexcept>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+void t2_fail(const char* fmt, ...) {
+  char m[1024];
+  va_list a; va_start(a, fmt); vsnprintf(m, sizeof(m), fmt, a); va_end(a);
+  fprintf(stderr, "%s\n", m);
+  throw std::runtime_error(m);
+}
 
 size_t dsize(DT d) { static const size_t s[] = {4, 2, 2, 4, 8, 1, 8, 1}; return s[d]; }
 const char* dname(DT d) { static const char* s[] = {"F32", "F16", "BF16", "I32", "I64", "U8", "F64", "I8"}; return s[d]; }

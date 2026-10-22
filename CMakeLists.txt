@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 3.24)
 project(trellis2_cuda LANGUAGES CXX CUDA)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CUDA_STANDARD 17)
-set(CMAKE_CUDA_ARCHITECTURES 90)
+set(T2_CUDA_ARCH 90 CACHE STRING "SM architecture; FA3 (fast-build attention) is only built for 90")
+set(CMAKE_CUDA_ARCHITECTURES ${T2_CUDA_ARCH})
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
@@ -16,18 +18,21 @@ target_include_directories(t2flash PUBLIC src ${CMAKE_SOURCE_DIR}/third_party/sh
 target_compile_options(t2flash PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-O3 -U__CUDA_NO_HALF_OPERATORS__ -U__CUDA_NO_HALF_CONVERSIONS__
   -U__CUDA_NO_HALF2_OPERATORS__ -U__CUDA_NO_BFLOAT16_CONVERSIONS__ --expt-relaxed-constexpr --expt-extended-lambda --use_fast_math>)
 # FlashAttention-3 (hopper/) forward for the fast build, its setup.py flags; FA2 symbol names renamed away
-add_library(t2fa3 STATIC src/fa3.cu ${FA}/hopper/instantiations/flash_fwd_hdim128_bf16_sm90.cu)
-set_target_properties(t2fa3 PROPERTIES CUDA_ARCHITECTURES OFF)
-target_include_directories(t2fa3 PRIVATE ${FA}/hopper ${FA}/csrc/cutlass/include)
-target_compile_definitions(t2fa3 PRIVATE flash=flash3 Flash_fwd_params=Flash3_fwd_params Flash_bwd_params=Flash3_bwd_params Qkv_params=Qkv3_params
-  CUTE_SM90_EXTENDED_MMA_SHAPES_ENABLED CUTLASS_DEBUG_TRACE_LEVEL=0 NDEBUG FLASHATTENTION_DISABLE_BACKWARD FLASHATTENTION_DISABLE_FP8
-  FLASHATTENTION_DISABLE_FP16 FLASHATTENTION_DISABLE_SM8x)
-target_compile_options(t2fa3 PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-O3 --use_fast_math --expt-relaxed-constexpr --expt-extended-lambda
-  --ftemplate-backtrace-limit=0 -gencode arch=compute_90a,code=sm_90a>)
+if(T2_CUDA_ARCH STREQUAL "90")
+  add_library(t2fa3 STATIC src/fa3.cu ${FA}/hopper/instantiations/flash_fwd_hdim128_bf16_sm90.cu)
+  set_target_properties(t2fa3 PROPERTIES CUDA_ARCHITECTURES OFF)
+  target_include_directories(t2fa3 PRIVATE ${FA}/hopper ${FA}/csrc/cutlass/include)
+  target_compile_definitions(t2fa3 PRIVATE flash=flash3 Flash_fwd_params=Flash3_fwd_params Flash_bwd_params=Flash3_bwd_params Qkv_params=Qkv3_params
+    CUTE_SM90_EXTENDED_MMA_SHAPES_ENABLED CUTLASS_DEBUG_TRACE_LEVEL=0 NDEBUG FLASHATTENTION_DISABLE_BACKWARD FLASHATTENTION_DISABLE_FP8
+    FLASHATTENTION_DISABLE_FP16 FLASHATTENTION_DISABLE_SM8x)
+  target_compile_options(t2fa3 PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-O3 --use_fast_math --expt-relaxed-constexpr --expt-extended-lambda
+    --ftemplate-backtrace-limit=0 -gencode arch=compute_90a,code=sm_90a>)
+  set(T2_FA3 t2fa3)
+endif()
 
 # Everything else: no fast-math (ATen is built without it), default FMA contraction like ATen.
 # Link the same cuDNN torch loads (pip nvidia-cudnn-cu12) when present
-execute_process(COMMAND python3 -c "import nvidia.cudnn, os; print(os.path.dirname(nvidia.cudnn.__file__))"
+execute_process(COMMAND python3 -c "import nvidia.cudnn; print(list(nvidia.cudnn.__path__)[0])"
                 OUTPUT_VARIABLE PIP_CUDNN OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
 find_path(CUDNN_INC cudnn.h HINTS ${CUDNN_ROOT}/include ${PIP_CUDNN}/include /usr/include)
 find_library(CUDNN_LIB NAMES cudnn libcudnn.so.9 HINTS ${CUDNN_ROOT}/lib ${PIP_CUDNN}/lib /usr/lib/x86_64-linux-gnu)
@@ -46,7 +51,8 @@ set_source_files_properties(${CM}/../third_party/cubvh/src/bvh.cu PROPERTIES COM
   "--extended-lambda;-U__CUDA_NO_HALF_OPERATORS__;-U__CUDA_NO_HALF_CONVERSIONS__;-U__CUDA_NO_HALF2_OPERATORS__")
 target_include_directories(t2cumesh PUBLIC ${CMAKE_SOURCE_DIR}/third_party/shim ${CMAKE_SOURCE_DIR}/src ${CM}
   ${CM}/../third_party/cubvh/include ${CM}/../third_party/cubvh/third_party/eigen ${CM}/../third_party/xatlas)
-target_compile_options(t2cumesh PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-O3 --expt-relaxed-constexpr> $<$<COMPILE_LANGUAGE:CXX>:-O3>)
+# atlas.cu uses FLT_MAX without <cfloat>; CUDA 12.4's headers included it transitively, 12.8's don't.
+target_compile_options(t2cumesh PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-O3 --expt-relaxed-constexpr --pre-include=cfloat> $<$<COMPILE_LANGUAGE:CXX>:-O3>)
 
 # FlexGEMM grid_sample neighbor/weight kernels with its setup.py flags (fast-math)
 set(FGK ${CMAKE_SOURCE_DIR}/third_party/FlexGEMM/flex_gemm/kernels/cuda)
@@ -77,7 +83,10 @@ add_subdirectory(third_party/libwebp EXCLUDE_FROM_ALL)
 target_compile_definitions(t2 PRIVATE T2_WEBP T2_FLEXGEMM_CACHE_DEFAULT="${CMAKE_SOURCE_DIR}/assets/flexgemm_autotune.json")
 target_link_libraries(t2 PUBLIC webp libwebpmux)
 target_include_directories(t2 PRIVATE ${CMAKE_SOURCE_DIR}/third_party/libwebp/src)
-target_link_libraries(t2 PUBLIC t2flash t2fa3 t2mea t2cumesh t2flexgemm t2nvdr Threads::Threads CUDA::cudart CUDA::cublas CUDA::cublasLt ${CUDNN_LIB})
+target_link_libraries(t2 PUBLIC t2flash ${T2_FA3} t2mea t2cumesh t2flexgemm t2nvdr Threads::Threads CUDA::cudart CUDA::cublas CUDA::cublasLt ${CUDNN_LIB})
+if(NOT T2_FA3)
+  target_compile_definitions(t2 PRIVATE T2_NO_FA3)
+endif()
 
 add_executable(parity apps/parity.cu)
 target_link_libraries(parity t2)
@@ -85,3 +94,10 @@ target_link_libraries(parity t2)
 add_executable(t2cli apps/t2.cu)
 set_target_properties(t2cli PROPERTIES OUTPUT_NAME t2)
 target_link_libraries(t2cli t2)
+
+# C API for embedding (the Hugging Face Space loads it with ctypes); only t2_* symbols are exported.
+add_library(t2lib SHARED apps/t2lib.cu)
+set_target_properties(t2lib PROPERTIES OUTPUT_NAME t2 CUDA_VISIBILITY_PRESET hidden CXX_VISIBILITY_PRESET hidden)
+target_link_libraries(t2lib PRIVATE t2)
+# Bind internally so flash-attn/cutlass/xatlas symbols already loaded by torch in the same process can't interpose.
+target_link_options(t2lib PRIVATE -Wl,--exclude-libs,ALL -Wl,-Bsymbolic)

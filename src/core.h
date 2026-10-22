@@ -11,8 +11,10 @@
 #include <string>
 #include <vector>
 
-#define CK(x) do { cudaError_t e_ = (x); if (e_ != cudaSuccess) { fprintf(stderr, "CUDA %s @ %s:%d: %s\n", #x, __FILE__, __LINE__, cudaGetErrorString(e_)); abort(); } } while (0)
-#define REQ(c, ...) do { if (!(c)) { fprintf(stderr, "check failed %s @ %s:%d: ", #c, __FILE__, __LINE__); fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\n"); abort(); } } while (0)
+// Logs to stderr and throws std::runtime_error (uncaught in the CLIs, so they still terminate).
+[[noreturn]] void t2_fail(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
+#define CK(x) do { cudaError_t e_ = (x); if (e_ != cudaSuccess) t2_fail("CUDA %s @ %s:%d: %s", #x, __FILE__, __LINE__, cudaGetErrorString(e_)); } while (0)
+#define REQ(c, ...) do { if (!(c)) { char m_[512]; snprintf(m_, sizeof(m_), __VA_ARGS__); t2_fail("check failed %s @ %s:%d: %s", #c, __FILE__, __LINE__, m_); } } while (0)
 
 using bf16 = __nv_bfloat16;
 using f16 = __half;

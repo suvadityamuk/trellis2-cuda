@@ -119,6 +119,16 @@ the vertex normals. A new image or GPU needs one official run first, to add its 
 - `tools/`: offline-only Python (reference dumps, official timing, GLB comparison, plots, and renders).
 - `bench/`: raw timings, plus the T.png chart-size and TELEA-level dumps. `docs/`: blog, plots and renders.
 - `assets/flexgemm_autotune.json`: the sparse-conv tile choices shared by both sides for bitwise parity.
+- `hub/trellis2-kernels/`: a standalone [Kernel Hub](https://huggingface.co/docs/kernels) package (Apache-2.0) with
+  two of the kernels written here: `mesh_udf` (GPU linear BVH, point-to-mesh distance, face id and barycentrics) and
+  `telea_inpaint` (the fast build's wavefront TELEA, a GPU alternative to `cv2.inpaint`). It builds with
+  `kernel-builder build-and-copy` for torch 2.13/2.14 × CUDA 12.6/13.0/13.2 and passes its tests on H200.
+- `apps/t2lib.cu`, `space/`: a ZeroGPU Gradio Space. `libt2.so` is the pipeline as a C ABI (`t2_load`,
+  `t2_image_to_glb`, `t2_last_error`) that `space/t2.py` loads with ctypes inside `@spaces.GPU`. Build it for the
+  Blackwell GPUs behind ZeroGPU with `T2_CMAKE_ARGS=-DT2_CUDA_ARCH=120 tools/build.sh build120` (CUDA 12.8; FA2
+  replaces the Hopper-only FA3), then `tools/make_space.sh build120 <TRELLIS.2 checkout>`. On an RTX PRO 6000 the
+  fast build with `T2_TELEA_GPU=0` (the GPU TELEA faults on sm_120) takes 23-52 s per image at 4096² / 1M faces and
+  stays within the torch.compile-vs-eager spread of the exact build.
 
 Third-party CUDA code is reused unmodified: flash-attention 2.7.3 (FA2 + FA3), CuMesh, cuBVH, xatlas, FlexGEMM,
 nvdiffrast 0.4.0, cudnn-frontend, cutlass, and libwebp 1.4.0.

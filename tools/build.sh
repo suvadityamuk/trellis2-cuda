@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fetch pinned third-party CUDA sources and build. Usage: tools/build.sh [build_dir]
+# Fetch pinned third-party CUDA sources and build. Usage: [T2_CMAKE_ARGS=-DT2_CUDA_ARCH=120] tools/build.sh [build_dir]
 set -euo pipefail
 cd "$(dirname "$0")/.."
 FA=third_party/flash-attention
@@ -44,5 +44,5 @@ mkdir -p $TC && [ -s $TC/avx_mathfun.h ] || \
 mkdir -p third_party/stb && [ -f third_party/stb/stb_image.h ] || \
   python3 -c "import urllib.request as u; u.urlretrieve('https://raw.githubusercontent.com/nothings/stb/f58f558c120e9b32c217290b80bad1a0729fbb2c/stb_image.h', 'third_party/stb/stb_image.h')"
 B=${1:-build}
-cmake -S . -B $B -G Ninja -DCMAKE_BUILD_TYPE=Release >/dev/null
+cmake -S . -B $B -G Ninja -DCMAKE_BUILD_TYPE=Release ${T2_CMAKE_ARGS:-} >/dev/null
 cmake --build $B -j

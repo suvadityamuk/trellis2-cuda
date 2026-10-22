@@ -108,11 +108,13 @@ Tensor DiT::forward(const Tensor& x, float t, const Tensor& cond_f) {
   static Tensor cu_q, cu_k; static int cached_n = -1, cached_l = -1;
   if (!dense && (cached_n != N || cached_l != L)) { cu_q = from_host(cuq, {2}, I32); cu_k = from_host(cuk, {2}, I32); cached_n = N; cached_l = L; }
   auto attn = [&](const void* q, i64 qrs, const void* k, i64 krs, const void* v, i64 vrs, void* o, i64 Tk) {
+#ifndef T2_NO_FA3
     if (fast_mode()) {
       static int nsm = [] { int n; CK(cudaDeviceGetAttribute(&n, cudaDevAttrMultiProcessorCount, 0)); return n; }();
       Tensor lse = empty({H, N}, F32);
       return fa3_fwd(q, qrs, k, krs, v, vrs, o, H, (int)N, (int)Tk, lse.ptr<float>(), nsm, stream());
     }
+#endif
     if (dense) flash_attn(q, qrs, k, krs, v, vrs, o, H, (int)N, (int)Tk, nullptr, nullptr, 1, 0, 0);
     else flash_attn(q, qrs, k, krs, v, vrs, o, H, (int)N, (int)Tk, cu_q.ptr<int>(), (Tk == N ? cu_q : cu_k).ptr<int>(), 1, (int)N, (int)Tk);
   };

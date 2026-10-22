@@ -555,7 +555,7 @@ void Glb::bake(const Tensor& attrs, const Tensor& coords, int T) {
   k_to_u8<<<cdiv(L, 256), 256, 0, stream()>>>(samp.ptr<float>(), pix.ptr<int>(), L, P, u8.ptr<uint8_t>());
   std::vector<uint8_t> h;
   auto rgb = [&] { std::vector<uint8_t> o(P * 3); for (i64 i = 0; i < P * 3; i++) o[i] = h[(i % 3) * P + i / 3]; return from_host(o.data(), {T, T, 3}, U8); };
-  if (fast_mode()) {
+  if (fast_mode() && env("T2_TELEA_GPU", "1") == "1") {
     prof("bake gpu");
     telea_gpu(flag, T, u8); h = to_host_vec<uint8_t>(u8);
   } else {
