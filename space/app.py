@@ -84,6 +84,8 @@ def run_cuda(path: str, seed: int, faces: int, texture: int):
     r = json.loads(lines[-1]) if lines and lines[-1].startswith("{") else {"error": (p.stderr or p.stdout)[-600:]}
     if "error" in r:
         raise gr.Error(f"CUDA C++ port failed: {r['error'].split(': ', 1)[-1]}")
+    if not r["fast"]:
+        raise gr.Error("CUDA C++ port ran its parity build instead of the fast build.")
     t = r["times"]
     stages = [t["pipeline"], t["remesh"] + t["simplify"] + t["uv_unwrap"] + t["bake"], t["export"]]
     return out, stages, r["load"], r["vertices"], r["faces"]
@@ -211,7 +213,7 @@ with gr.Blocks(title="TRELLIS.2: CUDA C++ vs PyTorch", delete_cache=(600, 600)) 
             status = gr.Markdown("*Pick an example or upload an image.*")
             with gr.Row():
                 with gr.Column():
-                    gr.Markdown("## CUDA C++ port")
+                    gr.Markdown("## CUDA C++ port (fast build)")
                     c_view = gr.Model3D(label="CUDA C++ GLB", height=380, clear_color=(0.25, 0.25, 0.25, 1.0))
                     c_dl = gr.DownloadButton("Download GLB")
                     c_info = gr.Markdown()
