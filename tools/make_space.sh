@@ -7,6 +7,11 @@ B=$1 TR=$2 S=space TP=third_party
 mkdir -p $S/lib $S/assets $S/examples $S/LICENSES
 cp $B/libt2.so $S/lib/
 cp assets/flexgemm_autotune.json $S/assets/
+# The PyTorch side runs Microsoft's Space snapshot of trellis2 (it matches their prebuilt o_voxel/FlexGEMM wheels) with
+# their RTX PRO 6000 FlexGEMM autotune cache.
+rm -rf $S/trellis2
+hf download microsoft/TRELLIS.2 --repo-type space --include "trellis2/*" --include autotune_cache.json --local-dir $S/.official >/dev/null
+mv $S/.official/trellis2 $S/; mv $S/.official/autotune_cache.json $S/assets/; rm -rf $S/.official
 E=$TR/assets/example_image
 cp $E/0a34*.webp $E/0e49*.webp $E/0f16*.webp $E/130c*.webp $E/T.png $S/examples/
 cp LICENSE $S/LICENSES/trellis2-cuda-LICENSE; cp NOTICE $S/LICENSES/trellis2-cuda-NOTICE
