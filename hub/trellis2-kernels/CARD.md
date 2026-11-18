@@ -82,4 +82,4 @@ The other 10 builds passed kernel-builder's checks (ABI compatibility and loadin
 
 ## Source and license
 
-The source, tests and build config are in [`hub/trellis2-kernels](https://github.com/suvadityamuk/trellis2-cuda/tree/main/hub/trellis2-kernels)`. Licensed under Apache-2.0.
+The source, tests and build config are in [`hub/trellis2-kernels`](https://github.com/suvadityamuk/trellis2-cuda/tree/main/hub/trellis2-kernels). Licensed under Apache-2.0.
