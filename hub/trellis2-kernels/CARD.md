@@ -9,7 +9,7 @@ tags:
   - inpainting
 ---
 
-# trellis2-kernels
+# trellis2-cuda
 
 Two standalone CUDA kernels from [TRELLIS.2 in CUDA C++](https://github.com/suvadityamuk/trellis2-cuda), a port of
 Microsoft's [TRELLIS.2](https://github.com/microsoft/TRELLIS.2) image-to-3D pipeline. In the port, they replace serial CPU steps in mesh post-processing:

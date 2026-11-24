@@ -7,7 +7,7 @@ backends = ["cuda"]
 source = "https://github.com/suvadityamuk/trellis2-cuda"
 
 [general.hub]
-repo-id = "suvadityamuk/trellis2-kernels"
+repo-id = "suvadityamuk/trellis2-cuda"
 
 [torch]
 src = [

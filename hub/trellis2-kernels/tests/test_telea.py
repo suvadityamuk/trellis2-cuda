@@ -4,7 +4,7 @@ import torch
 
 pytestmark = pytest.mark.kernels_ci
 
-k = kernels.get_kernel("suvadityamuk/trellis2-kernels", version=1, trust_remote_code=True)
+k = kernels.get_kernel("suvadityamuk/trellis2-cuda", version=1, trust_remote_code=True)
 
 
 def blobs(H, W, seed=0):
