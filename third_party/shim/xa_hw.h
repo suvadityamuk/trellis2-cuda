@@ -1,10 +1,13 @@
 // Thread count for xatlas: hardware_concurrency() ignores the cgroup CPU quota (192 vs 23 on HF Jobs).
 #pragma once
 #include <algorithm>
+#include <atomic>
 #include <cstdio>
 #include <cstdlib>
 #include <thread>
-static inline unsigned xa_hw() {
+// Non-zero while the grouped packer (src/uv_atlas.cpp) runs one Atlas per pool thread: each Atlas then gets one worker.
+inline std::atomic<unsigned> xa_hw_override{0};
+static inline unsigned xa_hw_real() {
   static unsigned n = [] {
     if (const char* e = std::getenv("XA_THREADS")) return (unsigned)std::max(1, std::atoi(e));
     unsigned hw = std::max(1u, std::thread::hardware_concurrency());
@@ -16,4 +19,8 @@ static inline unsigned xa_hw() {
     return q > 0 && p > 0 ? std::min(hw, (unsigned)((q + p - 1) / p)) : hw;
   }();
   return n;
+}
+static inline unsigned xa_hw() {
+  if (unsigned o = xa_hw_override.load(std::memory_order_relaxed)) return o;
+  return xa_hw_real();
 }

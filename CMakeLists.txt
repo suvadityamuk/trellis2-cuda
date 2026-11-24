@@ -52,7 +52,8 @@ set_source_files_properties(${CM}/../third_party/cubvh/src/bvh.cu PROPERTIES COM
 target_include_directories(t2cumesh PUBLIC ${CMAKE_SOURCE_DIR}/third_party/shim ${CMAKE_SOURCE_DIR}/src ${CM}
   ${CM}/../third_party/cubvh/include ${CM}/../third_party/cubvh/third_party/eigen ${CM}/../third_party/xatlas)
 # atlas.cu uses FLT_MAX without <cfloat>; CUDA 12.4's headers included it transitively, 12.8's don't.
-target_compile_options(t2cumesh PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-O3 --expt-relaxed-constexpr --pre-include=cfloat> $<$<COMPILE_LANGUAGE:CXX>:-O3>)
+target_compile_options(t2cumesh PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-O3 --expt-relaxed-constexpr --pre-include=cfloat
+  --pre-include=${CMAKE_SOURCE_DIR}/third_party/shim/cm_alloc.h> $<$<COMPILE_LANGUAGE:CXX>:-O3>)
 
 # FlexGEMM grid_sample neighbor/weight kernels with its setup.py flags (fast-math)
 set(FGK ${CMAKE_SOURCE_DIR}/third_party/FlexGEMM/flex_gemm/kernels/cuda)
@@ -69,7 +70,7 @@ target_include_directories(t2nvdr PRIVATE ${NV} ${CMAKE_SOURCE_DIR}/third_party/
 target_compile_options(t2nvdr PRIVATE -include nvdr_check.h $<$<COMPILE_LANGUAGE:CUDA>:-lineinfo>)
 target_link_libraries(t2nvdr PUBLIC CUDA::cudart CUDA::cuda_driver)
 
-add_library(t2 STATIC src/core.cu src/gemm.cu src/ops.cu src/dit.cu src/conv.cu src/ssdec.cu src/dino.cu src/image.cu src/spconv.cu src/sdec.cu src/mesh.cu src/pipeline.cu src/rng.cpp src/glb.cu src/inpaint.cpp src/gltf.cpp)
+add_library(t2 STATIC src/core.cu src/gemm.cu src/ops.cu src/dit.cu src/conv.cu src/ssdec.cu src/dino.cu src/image.cu src/spconv.cu src/sdec.cu src/mesh.cu src/pipeline.cu src/rng.cpp src/glb.cu src/inpaint.cpp src/gltf.cpp src/uv_atlas.cpp)
 target_include_directories(t2 PUBLIC src ${CUDNN_INC} ${CMAKE_SOURCE_DIR}/third_party/cudnn-frontend/include ${CMAKE_SOURCE_DIR}/third_party/stb)
 target_compile_options(t2 PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-O3 --expt-relaxed-constexpr -Xcompiler=-ffp-contract=off>)
 set_source_files_properties(src/rng.cpp PROPERTIES COMPILE_OPTIONS "-mavx2;-mfma;-ffp-contract=fast")

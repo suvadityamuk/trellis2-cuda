@@ -2,6 +2,19 @@
 // trellis2/models/sc_vaes/sparse_unet_vae.py with FlexGEMM submanifold convs.
 #include "models.h"
 #include <cub/cub.cuh>
+#include <map>
+
+// T2_DECPROF=1: per-op wall time (device-synchronised) per decoder run, keyed by level.
+static struct SProf {
+  bool on = env("T2_DECPROF") == "1"; double t = 0; int lvl = 0; std::map<std::string, double> acc;
+  void start() { if (on) { dsync(); t = now_ms(); } }
+  void tick(const char* n) { if (on) { dsync(); double x = now_ms(); acc["L" + std::to_string(lvl) + "." + n] += x - t; t = x; } }
+  void dump() {
+    if (!on) return;
+    double tot = 0; for (auto& [k, v] : acc) tot += v;
+    printf("    sdec %.1f ms:", tot); for (auto& [k, v] : acc) printf(" %s %.1f", k.c_str(), v); printf("\n"); acc.clear();
+  }
+} sprof;
 
 void SDecoder::load(const std::string& path, bool subdiv) {
   W = load_safetensors(path); pred_subdiv = subdiv;
@@ -57,31 +70,36 @@ SDecoder::Level SDecoder::c2s(const Level& in, const Tensor& sub) {
 }
 
 Tensor SDecoder::convnext(const std::string& p, const Tensor& x, SpConvCache& c) {
-  Tensor h = conv(p + ".conv", x, c);
-  h = layer_norm(h, &w(p + ".norm.weight"), &w(p + ".norm.bias"), 1e-6f);
-  h = linear(h, w(p + ".mlp.0.weight"), &w(p + ".mlp.0.bias"));
-  act_(h, SILU);
-  h = linear(h, w(p + ".mlp.2.weight"), &w(p + ".mlp.2.bias"));
-  add_(h, x);
+  sprof.start();
+  Tensor h = conv(p + ".conv", x, c); sprof.tick("conv");
+  h = layer_norm(h, &w(p + ".norm.weight"), &w(p + ".norm.bias"), 1e-6f); sprof.tick("ln");
+  h = linear(h, w(p + ".mlp.0.weight"), &w(p + ".mlp.0.bias")); sprof.tick("mlp0");
+  act_(h, SILU); sprof.tick("silu");
+  h = linear(h, w(p + ".mlp.2.weight"), &w(p + ".mlp.2.bias")); sprof.tick("mlp2");
+  add_(h, x); sprof.tick("add");
   return h;
 }
 
 // SparseResBlockC2S3d: returns (h at child level, subdiv logits used)
 Tensor SDecoder::up(const std::string& p, const Tensor& x, Level& lv, const Tensor* guide, Tensor* sub_out) {
+  sprof.start();
   Tensor sub = guide ? *guide : linear(x, w(p + ".to_subdiv.weight"), &w(p + ".to_subdiv.bias"));
   if (sub_out) *sub_out = sub;
   Tensor h = layer_norm(x, &w(p + ".norm1.weight"), &w(p + ".norm1.bias"), 1e-6f);
   act_(h, SILU);
-  h = conv(p + ".conv1", h, *lv.nb);
+  sprof.tick("up_pre");
+  h = conv(p + ".conv1", h, *lv.nb); sprof.tick("up_conv1");
   int Cin = (int)x.size(1), Co = (int)h.size(1) / 8;
-  Level ch = c2s(lv, sub);
+  Level ch = c2s(lv, sub); sprof.tick("up_c2s");
   i64 m = ch.coords.size(0);
   Tensor hc = empty({m, Co}, F16);
   k_gather_rows<<<cdiv(m * Co, 256), 256, 0, stream()>>>(h.ptr<f16>(), ch.src.ptr<int>(), m, Co, hc.ptr<f16>());
   h = layer_norm(hc, nullptr, nullptr, 1e-6f);
   act_(h, SILU);
-  h = conv(p + ".conv2", h, *ch.nb);
+  sprof.tick("up_mid");
+  h = conv(p + ".conv2", h, *ch.nb); sprof.tick("up_conv2");
   k_add_skip<<<cdiv(m * Co, 256), 256, 0, stream()>>>(h.ptr<f16>(), x.ptr<f16>(), ch.src.ptr<int>(), m, Co, Cin, Co / (Cin / 8));
+  sprof.tick("up_skip");
   lv = ch;
   return h;
 }
@@ -95,6 +113,8 @@ Tensor SDecoder::run(const Tensor& feats, const Tensor& coords, const std::vecto
   h = cast(h, F16);
   const int nblk[5] = {4, 16, 8, 4, 0};
   for (int i = 0; i < 5; i++) {
+    sprof.lvl = i;
+    if (sprof.on) printf("    sdec level %d: N=%lld C=%lld\n", i, (long long)h.size(0), (long long)h.size(1));
     if (i == stop_level) { if (coords_out) *coords_out = lv.coords; return Tensor(); }
     for (int j = 0; j <= nblk[i] - (i == 4); j++) {
       std::string p = "blocks." + std::to_string(i) + "." + std::to_string(j);
@@ -109,8 +129,10 @@ Tensor SDecoder::run(const Tensor& feats, const Tensor& coords, const std::vecto
     }
   }
   if (coords_out) *coords_out = lv.coords;
+  sprof.start();
   h = layer_norm_f32(cast(h, F32), nullptr, nullptr, 1e-5f);
   h = linear(h, w("output_layer.weight"), &w("output_layer.bias"));
+  sprof.tick("out"); sprof.dump();
   tap("output_layer.out.feats", h);
   return h;
 }

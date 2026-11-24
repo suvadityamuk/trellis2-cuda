@@ -19,20 +19,21 @@ static void* lt_ws() { static void* w = [] { void* w; CK(cudaMalloc(&w, 1 << 20)
 static uint32_t align_of(const void* p) { uint32_t a = 256; while ((uintptr_t)p % a) a /= 2; return a; }
 static cudaDataType_t cdt(DT d) { return d == BF16 ? CUDA_R_16BF : d == F16 ? CUDA_R_16F : CUDA_R_32F; }
 
-struct LtKey { int m, n, k, dt, aa, ab, ac, ad; bool operator<(const LtKey& o) const { return memcmp(this, &o, sizeof(*this)) < 0; } };
+struct LtKey { int m, n, k, dt, aa, ab, ac, ad, ep; bool operator<(const LtKey& o) const { return memcmp(this, &o, sizeof(*this)) < 0; } };
 
 // y[M,N] = x[M,K] W[N,K]^T + b : cublas column-major gemm(transa=T, transb=N, m=N, n=M, k=K).
-void linear(const Tensor& x, const Tensor& W, const Tensor* b, Tensor& y) {
+void linear(const Tensor& x, const Tensor& W, const Tensor* b, Tensor& y, bool gelu) {
   int K = (int)W.size(1), N = (int)W.size(0), M = (int)(x.numel() / K);
   REQ(x.dt == W.dt && y.dt == W.dt && x.size(-1) == K && y.numel() == (i64)M * N, "linear shapes/dtypes");
   if (M == 0) return;
+  REQ(!gelu || b, "gelu epilogue needs a bias");
   float alpha = 1.f, beta = 0.f;
   if (b) {
     static std::map<LtKey, cublasLtMatmulHeuristicResult_t> cache;
-    LtKey key{N, M, K, (int)W.dt, (int)align_of(W.p), (int)align_of(x.p), (int)align_of(y.p), (int)align_of(b->p)};
+    LtKey key{N, M, K, (int)W.dt, (int)align_of(W.p), (int)align_of(x.p), (int)align_of(y.p), (int)align_of(b->p), (int)gelu};
     cudaDataType_t t = cdt(W.dt);
     cublasLtMatmulDesc_t d; CB(cublasLtMatmulDescCreate(&d, CUBLAS_COMPUTE_32F, CUDA_R_32F));
-    cublasOperation_t ta = CUBLAS_OP_T, tb = CUBLAS_OP_N; cublasLtEpilogue_t ep = CUBLASLT_EPILOGUE_BIAS;
+    cublasOperation_t ta = CUBLAS_OP_T, tb = CUBLAS_OP_N; cublasLtEpilogue_t ep = gelu ? CUBLASLT_EPILOGUE_GELU_BIAS : CUBLASLT_EPILOGUE_BIAS;
     CB(cublasLtMatmulDescSetAttribute(d, CUBLASLT_MATMUL_DESC_TRANSA, &ta, sizeof ta));
     CB(cublasLtMatmulDescSetAttribute(d, CUBLASLT_MATMUL_DESC_TRANSB, &tb, sizeof tb));
     CB(cublasLtMatmulDescSetAttribute(d, CUBLASLT_MATMUL_DESC_EPILOGUE, &ep, sizeof ep));
@@ -63,5 +64,5 @@ void linear(const Tensor& x, const Tensor& W, const Tensor* b, Tensor& y) {
   }
 }
 Tensor linear(const Tensor& x, const Tensor& W, const Tensor* b) {
-  auto s = x.sh; s.back() = W.size(0); auto y = empty(s, W.dt); linear(x, W, b, y); return y;
+  auto s = x.sh; s.back() = W.size(0); auto y = empty(s, W.dt); linear(x, W, b, y, false); return y;
 }

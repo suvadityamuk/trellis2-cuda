@@ -72,6 +72,95 @@ void DiT::set_coords(const Tensor& coords4) {
   phases = rope_phases(coords4, fr, D);
 }
 
+
+// ------------------------------------------------------------------------------------------------ fast build (T2_FAST=1)
+// Fused bf16 kernels: same math as the parity path but without the fp32 round trips and the intermediate bf16
+// roundings between consecutive elementwise ops. One block (128 threads) per token row, C = 1536.
+// x += h * g (h, g optional; x keeps its bf16 rounding since it is the residual state), then
+// y = LayerNorm(x) * A + B with (A, B) = (1 + sc, sh) [adaLN modulate] or (w, b) [affine] or (1, 0).
+__global__ void k_res_ln(bf16* __restrict__ X, const bf16* __restrict__ Hh, const bf16* g, const bf16* sh, const bf16* sc, const float* w,
+                         const float* b, bf16* __restrict__ Y, float eps) {
+  constexpr int C = DiT::C, NT = 128, E = C / NT;
+  __shared__ float s1[4], s2[4];
+  bf16* x = X + (i64)blockIdx.x * C; int t = threadIdx.x;
+  float v[E], sum = 0.f;
+#pragma unroll
+  for (int j = 0; j < E; j++) {
+    int i = t + j * NT; float a = (float)x[i];
+    if (Hh) { float hv = (float)Hh[(i64)blockIdx.x * C + i]; if (g) hv *= (float)g[i]; bf16 r = (bf16)(a + hv); x[i] = r; a = (float)r; }
+    v[j] = a; sum += a;
+  }
+  for (int o = 16; o > 0; o >>= 1) sum += __shfl_down_sync(~0u, sum, o);
+  if ((t & 31) == 0) s1[t >> 5] = sum;
+  __syncthreads();
+  float mean = (s1[0] + s1[1] + s1[2] + s1[3]) * (1.f / C), ss = 0.f;
+#pragma unroll
+  for (int j = 0; j < E; j++) { v[j] -= mean; ss += v[j] * v[j]; }
+  for (int o = 16; o > 0; o >>= 1) ss += __shfl_down_sync(~0u, ss, o);
+  if ((t & 31) == 0) s2[t >> 5] = ss;
+  __syncthreads();
+  float rstd = rsqrtf((s2[0] + s2[1] + s2[2] + s2[3]) * (1.f / C) + eps);
+  bf16* y = Y + (i64)blockIdx.x * C;
+#pragma unroll
+  for (int j = 0; j < E; j++) {
+    int i = t + j * NT; float o = v[j] * rstd;
+    if (sc) o = o * (1.f + (float)sc[i]) + (float)sh[i];
+    else if (w) o = o * w[i] + b[i];
+    y[i] = (bf16)o;
+  }
+}
+// Multi-head QK RMSNorm (F.normalize * gamma * sqrt(D)) + RoPE in one pass. One warp per (row, head), 4 elems per lane.
+// src: [rows, >= ns*H*D] with row stride rs; stream j (j < ns) is read at offset j*H*D and written to dst[j] ([rows, H, D]).
+__global__ void k_qk_rope(const bf16* __restrict__ src, i64 rs, i64 rows, const float* g0, const float* g1, float scale, const float2* ph,
+                          bf16* __restrict__ d0, bf16* __restrict__ d1) {
+  constexpr int H = DiT::H, D = DiT::D;
+  i64 r = blockIdx.x * (i64)blockDim.y + threadIdx.y; if (r >= rows * H) return;
+  i64 row = r / H; int h = r % H, l = threadIdx.x;
+#pragma unroll
+  for (int j = 0; j < 2; j++) {
+    bf16* dst = j ? d1 : d0; if (!dst) continue;
+    const float* gm = (j ? g1 : g0) + h * D + l * 4;
+    const uint2 raw = *(const uint2*)(src + row * rs + (i64)j * H * D + h * D + l * 4);
+    const bf16* e = (const bf16*)&raw;
+    float v[4] = {(float)e[0], (float)e[1], (float)e[2], (float)e[3]};
+    float s = v[0] * v[0] + v[1] * v[1] + v[2] * v[2] + v[3] * v[3];
+    for (int o = 16; o > 0; o >>= 1) s += __shfl_xor_sync(~0u, s, o);
+    float k = scale / fmaxf(sqrtf(s), 1e-12f);
+#pragma unroll
+    for (int i = 0; i < 4; i++) v[i] = v[i] * k * gm[i];
+    if (ph) {
+      float2 p0 = ph[row * (D / 2) + l * 2], p1 = ph[row * (D / 2) + l * 2 + 1];
+      float a = v[0], b = v[1]; v[0] = a * p0.x - b * p0.y; v[1] = a * p0.y + b * p0.x;
+      a = v[2]; b = v[3]; v[2] = a * p1.x - b * p1.y; v[3] = a * p1.y + b * p1.x;
+    }
+    uint2 out; bf16* oe = (bf16*)&out;
+#pragma unroll
+    for (int i = 0; i < 4; i++) oe[i] = (bf16)v[i];
+    *(uint2*)(dst + r * D + l * 4) = out;
+  }
+}
+static void res_ln(Tensor& x, const Tensor* h, const bf16* g, const bf16* sh, const bf16* sc, const Tensor* w, const Tensor* b, Tensor& y) {
+  k_res_ln<<<(unsigned)x.size(0), 128, 0, stream()>>>(x.ptr<bf16>(), h ? h->ptr<bf16>() : nullptr, g, sh, sc, w ? w->ptr<float>() : nullptr,
+                                                      b ? b->ptr<float>() : nullptr, y.ptr<bf16>(), 1e-6f);
+}
+static void qk_rope(const void* src, i64 rs, i64 rows, const Tensor& g0, const Tensor* g1, const Tensor* ph, Tensor& d0, Tensor* d1) {
+  k_qk_rope<<<cdiv(rows * DiT::H, 8), dim3(32, 8), 0, stream()>>>((const bf16*)src, rs, rows, g0.ptr<float>(), g1 ? g1->ptr<float>() : nullptr,
+      (float)std::sqrt(128.0), ph ? ph->ptr<float2>() : nullptr, d0.ptr<bf16>(), d1 ? d1->ptr<bf16>() : nullptr);
+}
+// T2_DITPROF=1: per-op wall time (device-synchronised), printed per sampler run.
+static struct DProf {
+  bool on = env("T2_DITPROF") == "1"; double t = 0; std::map<std::string, double> acc;
+  void start() { if (on) { dsync(); t = now_ms(); } }
+  void tick(const char* n) { if (on) { dsync(); double x = now_ms(); acc[n] += x - t; t = x; } }
+  void dump(const char* tag) {
+    if (!on) return;
+    double tot = 0; for (auto& [k, v] : acc) tot += v;
+    printf("    dit[%s] %.1f ms:", tag, tot); for (auto& [k, v] : acc) printf(" %s %.1f", k.c_str(), v); printf("\n"); acc.clear();
+  }
+} dprof;
+static bool fuse_mode() { static bool f = fast_mode() && env("T2_DIT_FUSE", "1") == "1"; return f; }
+static bool gelu_epi() { static bool f = fast_mode() && env("T2_DIT_GELU_EPI", "1") == "1"; return f; }
+
 #define TAP(n, t) do { if (dbg) dbg(n, t); } while (0)
 static const float kRmsScale = (float)std::sqrt(128.0);
 
@@ -111,7 +200,7 @@ Tensor DiT::forward(const Tensor& x, float t, const Tensor& cond_f) {
 #ifndef T2_NO_FA3
     if (fast_mode()) {
       static int nsm = [] { int n; CK(cudaDeviceGetAttribute(&n, cudaDevAttrMultiProcessorCount, 0)); return n; }();
-      Tensor lse = empty({H, N}, F32);
+      static Tensor lse; if (lse.numel() < H * N) lse = empty({H * N}, F32);
       return fa3_fwd(q, qrs, k, krs, v, vrs, o, H, (int)N, (int)Tk, lse.ptr<float>(), nsm, stream());
     }
 #endif
@@ -120,7 +209,40 @@ Tensor DiT::forward(const Tensor& x, float t, const Tensor& cond_f) {
   };
 
   Tensor q = empty({N, H, D}, BF16), k = empty({N, H, D}, BF16), o = empty({N, H, D}, BF16);
+
+  if (fuse_mode()) {
+    dprof.start();
+    Tensor mall = empty({NB, 6 * C}, BF16);
+    for (int i = 0; i < NB; i++)
+      k_add_cast<<<cdiv(6 * C, 256), 256, 0, stream()>>>(blk[i].mod.ptr<float>(), mod.ptr<bf16>(), mall.ptr<bf16>() + (i64)i * 6 * C, 6 * C);
+    auto ch = [&](int i, int j) { return mall.ptr<bf16>() + ((i64)i * 6 + j) * C; };
+    Tensor h = empty({N, C}, BF16), h2 = empty({N, C}, BF16), qkv = empty({N, 3 * C}, BF16), f = empty({N, blk[0].f1W.size(0)}, BF16), ov = o.view({N, C});
+    res_ln(xs, nullptr, nullptr, ch(0, 0), ch(0, 1), nullptr, nullptr, h); dprof.tick("norm");
+    for (int i = 0; i < NB; i++) {
+      auto& b = blk[i];
+      linear(h, b.qkvW, &b.qkvb, qkv); dprof.tick("gemm_qkv");
+      qk_rope(qkv.p, 3 * C, N, b.qg, &b.kg, &phases, q, &k); dprof.tick("qknorm");
+      dprof.tick("qknorm"); attn(q.p, C, k.p, C, qkv.ptr<bf16>() + 2 * C, 3 * C, o.p, N); dprof.tick("self_attn"); dprof.tick("self_attn");
+      linear(ov, b.o1W, &b.o1b, h2); dprof.tick("gemm_o");
+      res_ln(xs, &h2, ch(i, 2), nullptr, nullptr, &b.n2w, &b.n2b, h); dprof.tick("norm");
+      linear(h, b.qW, &b.qb, h2); dprof.tick("gemm_o");
+      qk_rope(h2.p, C, N, b.cqg, nullptr, nullptr, q, nullptr); dprof.tick("qknorm");
+      auto& [kn, kvt] = cache[i];
+      dprof.tick("qknorm"); attn(q.p, C, kn.p, C, kvt.ptr<bf16>() + C, 2 * C, o.p, L); dprof.tick("cross_attn"); dprof.tick("cross_attn");
+      linear(ov, b.o2W, &b.o2b, h2); dprof.tick("gemm_o");
+      res_ln(xs, &h2, nullptr, ch(i, 3), ch(i, 4), nullptr, nullptr, h); dprof.tick("norm");
+      linear(h, b.f1W, &b.f1b, f, gelu_epi()); dprof.tick("gemm_f1");
+      if (!gelu_epi()) { act_(f, GELU_TANH); dprof.tick("gelu"); }
+      linear(f, b.f2W, &b.f2b, h2); dprof.tick("gemm_f2");
+      if (i + 1 < NB) res_ln(xs, &h2, ch(i, 5), ch(i + 1, 0), ch(i + 1, 1), nullptr, nullptr, h);
+      else { Tensor g = h2; g.p = ch(i, 5); g.sh = {C}; g.own = nullptr; gated_residual_(xs, h2, &g); }
+      dprof.tick("norm");
+    }
+    Tensor y = linear(layer_norm_f32(cast(xs, F32), nullptr, nullptr, 1e-5f), outW, &outb); dprof.tick("out");
+    return y;
+  }
   static const int tb = atoi(env("T2_TAPBLK", "0").c_str());
+  dprof.start();
   for (int i = 0; i < NB; i++) {
     auto& b = blk[i];
     const std::string bn = "blocks." + std::to_string(i) + ".";
@@ -130,27 +252,27 @@ Tensor DiT::forward(const Tensor& x, float t, const Tensor& cond_f) {
     // self-attention
     Tensor h = modulate(layer_norm(xs, nullptr, nullptr, 1e-6f), ch(0), ch(1));
     if (i == tb) TAP(bn + "self_attn.to_qkv.in", h);
-    Tensor qkv = linear(h, b.qkvW, &b.qkvb);  // [N, 3, H, D]
+    dprof.tick("norm"); Tensor qkv = linear(h, b.qkvW, &b.qkvb); dprof.tick("gemm_qkv");  // [N, 3, H, D]
     if (i == tb) TAP(bn + "self_attn.to_qkv.out", qkv);
     mh_rmsnorm(qkv.p, 3 * C, H, D, N, b.qg, kRmsScale, q.p, BF16);
     mh_rmsnorm(qkv.ptr<bf16>() + C, 3 * C, H, D, N, b.kg, kRmsScale, k.p, BF16);
     if (i == tb) { TAP(bn + "self_attn.q_rms_norm.out", q); TAP(bn + "self_attn.k_rms_norm.out", k); }
     rope_(q.p, N, H, D, phases, BF16);
     rope_(k.p, N, H, D, phases, BF16);
-    attn(q.p, C, k.p, C, qkv.ptr<bf16>() + 2 * C, 3 * C, o.p, N);
+    dprof.tick("qknorm"); attn(q.p, C, k.p, C, qkv.ptr<bf16>() + 2 * C, 3 * C, o.p, N); dprof.tick("self_attn");
     if (i == tb) TAP(bn + "self_attn.to_out.in", o);
-    h = linear(o.view({N, C}), b.o1W, &b.o1b);
+    h = linear(o.view({N, C}), b.o1W, &b.o1b); dprof.tick("gemm_o");
     if (i == tb) TAP(bn + "self_attn.out", h);
     Tensor g = ch(2);
     gated_residual_(xs, h, &g);
     // cross-attention
     h = layer_norm(xs, &b.n2w, &b.n2b, 1e-6f);
-    Tensor cq = linear(h, b.qW, &b.qb);
+    dprof.tick("norm"); Tensor cq = linear(h, b.qW, &b.qb); dprof.tick("gemm_o");
     mh_rmsnorm(cq.p, C, H, D, N, b.cqg, kRmsScale, q.p, BF16);
     auto& [kn, kvt] = cache[i];
-    attn(q.p, C, kn.p, C, kvt.ptr<bf16>() + C, 2 * C, o.p, L);
+    dprof.tick("qknorm"); attn(q.p, C, kn.p, C, kvt.ptr<bf16>() + C, 2 * C, o.p, L); dprof.tick("cross_attn");
     if (i == tb) TAP(bn + "cross_attn.to_out.in", o);
-    h = linear(o.view({N, C}), b.o2W, &b.o2b);
+    h = linear(o.view({N, C}), b.o2W, &b.o2b); dprof.tick("gemm_o");
     if (i == tb) TAP(bn + "cross_attn.out", h);
     add_(xs, h);
     // MLP
@@ -159,14 +281,14 @@ Tensor DiT::forward(const Tensor& x, float t, const Tensor& cond_f) {
     if (i == tb) TAP(bn + "norm3.out", h);
     h = modulate(h, ch(3), ch(4));
     if (i == tb) TAP(bn + "mlp.mlp.0.in", h);
-    h = linear(h, b.f1W, &b.f1b);
+    dprof.tick("norm"); h = linear(h, b.f1W, &b.f1b); dprof.tick("gemm_f1");
     if (i == tb) TAP(bn + "mlp.mlp.0.out", h);
-    act_(h, GELU_TANH);
+    act_(h, GELU_TANH); dprof.tick("gelu");
     if (i == tb) TAP(bn + "mlp.mlp.1.out", h);
-    h = linear(h, b.f2W, &b.f2b);
+    h = linear(h, b.f2W, &b.f2b); dprof.tick("gemm_f2");
     if (i == tb) TAP(bn + "mlp.out", h);
     g = ch(5);
-    gated_residual_(xs, h, &g);
+    gated_residual_(xs, h, &g); dprof.tick("norm");
     TAP("blocks." + std::to_string(i) + ".out", xs);
   }
   Tensor y = layer_norm_f32(cast(xs, F32), nullptr, nullptr, 1e-5f);
@@ -207,6 +329,7 @@ Tensor flow_sample(DiT& m, const Tensor& noise, const Tensor& cond, const Tensor
   };
   auto stdf = [&](const Tensor& x) { return m.dense ? std_all(x) : sparse_std(x); };
   Tensor x = clone(noise);
+  struct D_ { ~D_() { dprof.dump("sampler"); } } d_;
   for (int i = 0; i < c.steps; i++) {
     double t = ts[i], tp = ts[i + 1];
     Tensor pred;

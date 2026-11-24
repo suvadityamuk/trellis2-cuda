@@ -3,12 +3,14 @@
 //        t2 --bench <out.json> <out_dir> <images...>   (models loaded once, 1 untimed warmup on images[0], like tools/bench_ref.py)
 #include "models.h"
 #include <fstream>
+#include <vector>
 
-struct Times { double pipeline, to_glb, exp, total; };
+struct Times { double pipeline, to_glb, exp, total; std::vector<std::pair<std::string, double>> st; };
 
 static Times run(Pipeline& P, const std::string& img, const std::string& out, uint64_t seed, bool verbose) {
   double ts = now_ms(), t0 = ts;
-  auto lap = [&](const char* n) { dsync(); double t = now_ms(); if (verbose) printf("  %-12s %9.1f ms\n", n, t - ts); ts = t; };
+  std::vector<std::pair<std::string, double>> st;
+  auto lap = [&](const char* n) { dsync(); double t = now_ms(); if (verbose) printf("  %-12s %9.1f ms\n", n, t - ts); st.push_back({n, (t - ts) / 1e3}); ts = t; };
   Image8 im = load_image(img);
   P.times = lap;
   auto o = P.run(im, seed);
@@ -19,11 +21,12 @@ static Times run(Pipeline& P, const std::string& img, const std::string& out, ui
   g.simplify(V, F, 1000000); lap("simplify");
   g.unwrap(V, F); lap("uv_unwrap");
   g.bake(o.attrs, o.coords); lap("bake");
+  st.back().second -= g.tex_ms / 1e3; st.push_back({"textures", g.tex_ms / 1e3});  // inpaint + pack, as a separate stage
   dsync(); double t2 = now_ms();
   g.save(out); lap("export");
   double t3 = now_ms();
   if (verbose) printf("  %-12s %9.1f ms  (%lld verts, %lld faces)\n", "total", t3 - t0, (long long)g.V.size(0), (long long)g.F.size(0));
-  return {(t1 - t0) / 1e3, (t2 - t1) / 1e3, (t3 - t2) / 1e3, (t3 - t0) / 1e3};
+  return {(t1 - t0) / 1e3, (t2 - t1) / 1e3, (t3 - t2) / 1e3, (t3 - t0) / 1e3, st};
 }
 
 int main(int argc, char** argv) {
@@ -37,8 +40,10 @@ int main(int argc, char** argv) {
   std::string dir = argv[3];
   auto base = [](std::string p) { return p.substr(p.find_last_of('/') + 1); };
   auto fmt = [](const Times& t) {
-    char b[160]; snprintf(b, 160, "{\"pipeline\": %.4f, \"to_glb\": %.4f, \"export\": %.4f, \"total\": %.4f}", t.pipeline, t.to_glb, t.exp, t.total);
-    return std::string(b);
+    char b[160]; snprintf(b, 160, "{\"pipeline\": %.4f, \"to_glb\": %.4f, \"export\": %.4f, \"total\": %.4f, \"stages\": {", t.pipeline, t.to_glb, t.exp, t.total);
+    std::string s = b;
+    for (size_t i = 0; i < t.st.size(); i++) { snprintf(b, 160, "%s\"%s\": %.4f", i ? ", " : "", t.st[i].first.c_str(), t.st[i].second); s += b; }
+    return s + "}}";
   };
   printf("warmup %s\n", fmt(run(P, argv[4], dir + "/warmup.glb", 42, false)).c_str());
   std::string js = "{";

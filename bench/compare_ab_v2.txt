@@ -1,0 +1,9 @@
+0e49 f0 (T2_DIT_FUSE=0 T2_DIT_GELU_EPI=0): chamfer 3.57e-03 (x diag)  p99 1.29e-02  color L1 23.58/255
+0e49 f1 (T2_DIT_FUSE=1 T2_DIT_GELU_EPI=0): chamfer 3.70e-03 (x diag)  p99 1.32e-02  color L1 23.81/255
+0e49 f1g (T2_DIT_FUSE=1 T2_DIT_GELU_EPI=1): chamfer 3.58e-03 (x diag)  p99 1.29e-02  color L1 26.39/255
+0e49 f0x (T2_DIT_FUSE=0 T2_DIT_GELU_EPI=0 T2_XA_GROUPS=0): chamfer 3.57e-03 (x diag)  p99 1.29e-02  color L1 23.58/255
+0f16 f0 (T2_DIT_FUSE=0 T2_DIT_GELU_EPI=0): chamfer 2.74e-03 (x diag)  p99 1.17e-02  color L1 24.19/255
+0f16 f1 (T2_DIT_FUSE=1 T2_DIT_GELU_EPI=0): chamfer 2.61e-03 (x diag)  p99 1.06e-02  color L1 26.57/255
+0f16 f1g (T2_DIT_FUSE=1 T2_DIT_GELU_EPI=1): chamfer 2.67e-03 (x diag)  p99 1.12e-02  color L1 27.40/255
+0f16 f0x (T2_DIT_FUSE=0 T2_DIT_GELU_EPI=0 T2_XA_GROUPS=0): chamfer 2.74e-03 (x diag)  p99 1.17e-02  color L1 24.15/255
+ABDONE

@@ -2,7 +2,7 @@
 #include "core.h"
 
 // ---- GEMM (gemm.cu): torch F.linear semantics, y = x W^T + b
-void linear(const Tensor& x, const Tensor& W, const Tensor* b, Tensor& y);
+void linear(const Tensor& x, const Tensor& W, const Tensor* b, Tensor& y, bool gelu = false);  // gelu: cuBLASLt GELU_BIAS epilogue (fast build only)
 Tensor linear(const Tensor& x, const Tensor& W, const Tensor* b);
 
 // ---- ATen-exact elementwise / norm kernels (ops.cu). All match torch 2.6 CUDA bit-for-bit.

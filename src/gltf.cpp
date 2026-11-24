@@ -26,9 +26,9 @@ static std::string pyrepr(float f) {
 }
 
 // PIL Image.save(format="WEBP") defaults (Pillow 11 _webp.WebPEncode): lossy q80, alpha_quality 100, method 4, ARGB picture
-static std::string pil_webp(const uint8_t* px, int w, int h, int nc) {
+static std::string pil_webp(const uint8_t* px, int w, int h, int nc, float alpha_q = 100.f) {
   WebPConfig cfg; WebPConfigInit(&cfg);
-  cfg.lossless = 0; cfg.quality = 80.f; cfg.alpha_quality = 100.f; cfg.method = fast_mode() ? 0 : 4; cfg.exact = 0; cfg.thread_level = 1;
+  cfg.lossless = 0; cfg.quality = 80.f; cfg.alpha_quality = alpha_q; cfg.method = fast_mode() ? 0 : 4; cfg.exact = 0; cfg.thread_level = 1;
   REQ(WebPValidateConfig(&cfg), "webp config");
   WebPPicture pic; WebPPictureInit(&pic); pic.width = w; pic.height = h; pic.use_argb = 1;
   REQ(WebPPictureAlloc(&pic), "webp alloc");
@@ -63,8 +63,10 @@ std::string Glb::glb_bytes() const {
     n[i] = (float)(a * nr); n[i + 1] = (float)(b * nr); n[i + 2] = (float)(c * nr);
   }
   std::string img[2];
+  // fast: the material is OPAQUE, so the baked alpha plane is never shaded; its near-lossless encode dominates WebP time
+  float aq = fast_mode() ? std::stof(env("T2_WEBP_ALPHA_Q", "0")) : 100.f;
   double t = now_ms();
-  std::thread t0([&] { img[0] = pil_webp(base_rgba.data(), tex, tex, 4); }), t1([&] { img[1] = pil_webp(mr_rgb.data(), tex, tex, 3); });
+  std::thread t0([&] { img[0] = pil_webp(base_rgba.data(), tex, tex, 4, aq); }), t1([&] { img[1] = pil_webp(mr_rgb.data(), tex, tex, 3); });
   t0.join(); t1.join();
   if (env("T2_PROF") == "1") printf("    %-24s %8.1f ms\n", "webp", now_ms() - t);
   auto raw = [](const void* p, size_t b) { return std::string((const char*)p, b); };

@@ -27,6 +27,23 @@ if [ ! -d $CM/src ]; then
 fi
 XA=$CM/third_party/xatlas/xatlas.cpp
 grep -q xa_hw.h $XA || sed -i 's/std::thread::hardware_concurrency()/xa_hw()/g; s|^#include <thread>$|#include <thread>\n#include "xa_hw.h"|' $XA
+# Buffer::fill on device (was: host vector + synchronous upload per call)
+UH=$CM/src/utils.h
+grep -q t2_fill_kernel $UH || python3 - $UH <<'PY'
+import sys
+p = sys.argv[1]; s = open(p).read()
+old = """        std::vector<T> tmp(size, val);
+        CUDA_CHECK(cudaMemcpyAsync(ptr, tmp.data(), size * sizeof(T), cudaMemcpyHostToDevice, stream));
+        CUDA_CHECK(cudaStreamSynchronize(stream));"""
+new = """        if (size) t2_fill_kernel<T><<<(unsigned)((size + 255) / 256), 256, 0, stream>>>(ptr, size, val);"""
+assert old in s, "CuMesh utils.h Buffer::fill changed"
+s = s.replace(old, new).replace("namespace cumesh {", """template <typename T> __global__ void t2_fill_kernel(T* p, size_t n, T v) {
+    size_t i = blockIdx.x * (size_t)blockDim.x + threadIdx.x; if (i < n) p[i] = v;
+}
+
+namespace cumesh {""", 1)
+open(p, "w").write(s)
+PY
 FG=third_party/FlexGEMM  # pinned by trellis2 setup.sh (grid_sample_3d CUDA kernels)
 if [ ! -d $FG/flex_gemm ]; then
   git clone -q https://github.com/JeffreyXiang/FlexGEMM.git $FG && git -C $FG checkout -q 6dd94a859c26ee8246888502eada3dd8ad85532e

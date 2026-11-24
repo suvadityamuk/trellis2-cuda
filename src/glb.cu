@@ -19,6 +19,8 @@ std::shared_ptr<NvdrCtx> nvdr_ctx();
 void nvdr_rasterize(NvdrCtx& c, const float* pos, int nv, const int* tri, int nt, int h, int w, float* out, float* out_db, cudaStream_t s);
 void nvdr_interpolate(const float* attr, int nv, int na, const float* rast, int h, int w, const int* tri, int nt, float* out, cudaStream_t s);
 void inpaint_telea(uint8_t* img, int H, int W, bool rgb, const uint8_t* mask, double radius);
+void uv_pack_groups(const std::vector<float>& cv, const std::vector<int>& cf, const std::vector<int>& vo, const std::vector<int>& fo,
+                    int ngroups, int nthreads, int max_faces, std::vector<int>& vmap, std::vector<int>& faces, std::vector<float>& uvs, int info[5]);
 namespace flex_gemm::grid_sample {
 std::tuple<torch::Tensor, torch::Tensor> hashmap_build_grid_sample_3d_trilinear_neighbor_map_weight(
   torch::Tensor& keys, torch::Tensor& vals, const torch::Tensor& coords, const torch::Tensor& grid, const int W, const int H, const int D);
@@ -333,7 +335,19 @@ static void uv_unwrap(cumesh::CuMesh& m, Tensor& V, Tensor& F, Tensor& UV, Tenso
   auto [nc, cid, cvm, cf, cvo, cfo] = m.read_atlas_charts(); fence();
   auto hv = to_host_vec<float>(gather_rows(nv, cvm.t)); auto hf = to_host_vec<int>(cf.t);
   auto hvo = to_host_vec<int>(cvo.t), hfo = to_host_vec<int>(cfo.t), hvm = to_host_vec<int>(cvm.t);
-  // One xatlas mesh per chart. Fast build: xatlas chart growth is quadratic in mesh size and serial per mesh, so charts
+  // Fast build: grouped parallel atlas (src/uv_atlas.cpp). T2_XA_GROUPS=0 selects the previous single-Atlas path below.
+  if (int G = fast_mode() ? std::stoi(env("T2_XA_GROUPS", "64")) : 0; G > 0) {
+    std::vector<int> vm, ff; std::vector<float> uv; int info[5];
+    prof("xatlas host read");
+    uv_pack_groups(hv, hf, hvo, hfo, G, std::stoi(env("T2_XA_THREADS", "0")), std::stoi(env("T2_XA_SPLIT", "1024")), vm, ff, uv, info);
+    prof("xatlas grouped");
+    if (env("T2_PROF") == "1") printf("    charts %d -> %d meshes in %d groups, atlas %dx%d, %d xatlas charts\n", nc, info[0], info[1], info[2], info[3], info[4]);
+    for (auto& x : vm) x = hvm[x];
+    vmaps = from_host(vm.data(), {(i64)vm.size()}, I32); F = from_host(ff.data(), {(i64)ff.size() / 3, 3}, I32);
+    UV = from_host(uv.data(), {(i64)vm.size(), 2}, F32); V = gather_rows(nv, vmaps);
+    return;
+  }
+  // One xatlas mesh per chart. Fast build (T2_XA_GROUPS=0): xatlas chart growth is quadratic in mesh size and serial per mesh, so charts
   // above `split` faces are cut by recursive centroid-median splits into independent meshes (extra seams only).
   struct XM { std::vector<float> pos; std::vector<uint32_t> idx; std::vector<int> gid; };
   std::vector<XM> xm;
@@ -478,13 +492,16 @@ __global__ void k_lv_mark(int* lv, int T, int L, int* cnt) {
 }
 template <int R> __global__ void k_telea_lv(const int* lv, int T, int L, uint8_t* img, i64 P, int c0) {
   i64 i = blockIdx.x * (i64)blockDim.x + threadIdx.x; if (i >= (i64)T * T || lv[i] != L) return;
-  int y = i / T, x = i % T;
-  auto kn = [&](int r, int c) { if (r < 0 || c < 0 || r >= T || c >= T) return false; int v = lv[(i64)r * T + c]; return v >= 0 && v < L; };
-  auto tv = [&](int r, int c) { return (float)lv[(i64)r * T + c]; };
-  auto I = [&](int ch, int r, int c) { return (float)img[ch * P + (i64)r * T + c]; };
+  int ii = (int)i, Pi = (int)P, y = ii / T, x = ii % T;
+  // 32-bit indices and clamped loads: ptxas 12.8 at -O1 and above miscompiles this kernel for sm_120 with 64-bit
+  // index arithmetic (illegal memory access at the first level; sm_90/sm_100 and -Xptxas -O0 are fine). Same values.
+  auto cl = [&](int v) { return v < 0 ? 0 : (v >= T ? T - 1 : v); };
+  auto kn = [&](int r, int c) { int v = lv[cl(r) * T + cl(c)]; return r >= 0 && c >= 0 && r < T && c < T && v >= 0 && v < L; };
+  auto tv = [&](int r, int c) { return (float)lv[cl(r) * T + cl(c)]; };
+  auto I = [&](int ch, int r, int c) { return (float)img[ch * Pi + cl(r) * T + cl(c)]; };
   float gx = kn(y, x + 1) ? (kn(y, x - 1) ? (tv(y, x + 1) - tv(y, x - 1)) * 0.5f : tv(y, x + 1) - L) : (kn(y, x - 1) ? L - tv(y, x - 1) : 0.f);
   float gy = kn(y + 1, x) ? (kn(y - 1, x) ? (tv(y + 1, x) - tv(y - 1, x)) * 0.5f : tv(y + 1, x) - L) : (kn(y - 1, x) ? L - tv(y - 1, x) : 0.f);
-  float Ia[3] = {}, Jx[3] = {}, Jy[3] = {}, s = 1e-20f;
+  float3 Ia = make_float3(0, 0, 0), Jx = Ia, Jy = Ia; float s = 1e-20f;
   for (int k = y - R; k <= y + R; k++)
     for (int l = x - R; l <= x + R; l++) {
       if ((k - y) * (k - y) + (l - x) * (l - x) > R * R || !kn(k, l)) continue;
@@ -492,20 +509,23 @@ template <int R> __global__ void k_telea_lv(const int* lv, int T, int L, uint8_t
       float dir = rx * gx + ry * gy; if (fabsf(dir) <= 0.01f) dir = 1e-6f;
       float w = fabsf(dir / (vl * sqrtf(vl) * (1 + fabsf(tv(k, l) - L))));
       bool r1 = kn(k, l + 1), l1 = kn(k, l - 1), d1 = kn(k + 1, l), u1 = kn(k - 1, l);
-      for (int c = 0; c < 3; c++) {
-        int ch = c0 + c; float v = I(ch, k, l);
-        float ix = r1 ? (l1 ? (I(ch, k, l + 1) - I(ch, k, l - 1)) * 2.f : I(ch, k, l + 1) - v) : (l1 ? v - I(ch, k, l - 1) : 0.f);
-        float iy = d1 ? (u1 ? (I(ch, k + 1, l) - I(ch, k - 1, l)) * 2.f : I(ch, k + 1, l) - v) : (u1 ? v - I(ch, k - 1, l) : 0.f);
-        Ia[c] += w * v; Jx[c] -= w * ix * rx; Jy[c] -= w * iy * ry;
-      }
+#define T2_TELEA_CH(c, m) { \
+        int ch = c0 + c; float v = I(ch, k, l); \
+        float ix = r1 ? (l1 ? (I(ch, k, l + 1) - I(ch, k, l - 1)) * 2.f : I(ch, k, l + 1) - v) : (l1 ? v - I(ch, k, l - 1) : 0.f); \
+        float iy = d1 ? (u1 ? (I(ch, k + 1, l) - I(ch, k - 1, l)) * 2.f : I(ch, k + 1, l) - v) : (u1 ? v - I(ch, k - 1, l) : 0.f); \
+        Ia.m += w * v; Jx.m -= w * ix * rx; Jy.m -= w * iy * ry; }
+      T2_TELEA_CH(0, x) T2_TELEA_CH(1, y) T2_TELEA_CH(2, z)
+#undef T2_TELEA_CH
       s += w;
     }
-  for (int c = 0; c < 3; c++) {
-    float sat = Ia[c] / s + (Jx[c] + Jy[c]) / (sqrtf(Jx[c] * Jx[c] + Jy[c] * Jy[c]) + 1e-20f);
-    img[(c0 + c) * P + i] = (uint8_t)fminf(fmaxf(rintf(sat + 0.5f), 0.f), 255.f);
-  }
+#define T2_TELEA_OUT(c, m) { \
+    float sat = Ia.m / s + (Jx.m + Jy.m) / (sqrtf(Jx.m * Jx.m + Jy.m * Jy.m) + 1e-20f); \
+    img[(c0 + c) * Pi + ii] = (uint8_t)fminf(fmaxf(rintf(sat + 0.5f), 0.f), 255.f); }
+  T2_TELEA_OUT(0, x) T2_TELEA_OUT(1, y) T2_TELEA_OUT(2, z)
+#undef T2_TELEA_OUT
 }
 static void telea_gpu(const Tensor& flag, int T, Tensor& u8) {
+  REQ(T <= 16384, "telea_gpu: texture too large for 32-bit plane indices");
   i64 P = (i64)T * T; Tensor lv = empty({P}, I32), cnt = zeros({1}, I32);
   k_lv_init<<<cdiv(P, 256), 256, 0, stream()>>>(flag.ptr<int>(), P, lv.ptr<int>());
   std::string dump = env("T2_TELEA"); std::ofstream o; if (!dump.empty()) o.open(dump);
@@ -517,6 +537,12 @@ static void telea_gpu(const Tensor& flag, int T, Tensor& u8) {
     int n = to_host_vec<int>(cnt)[0]; if (n == 0) break;
     if (!dump.empty()) o << n << '\n';
   }
+}
+
+__global__ void k_pack_tex(const uint8_t* h, i64 P, uint8_t* base, uint8_t* mr) {
+  i64 i = blockIdx.x * (i64)blockDim.x + threadIdx.x; if (i >= P) return;
+  base[i * 4] = h[i]; base[i * 4 + 1] = h[P + i]; base[i * 4 + 2] = h[2 * P + i]; base[i * 4 + 3] = h[5 * P + i];
+  mr[i * 3] = 0; mr[i * 3 + 1] = h[4 * P + i]; mr[i * 3 + 2] = h[3 * P + i];
 }
 
 void Glb::bake(const Tensor& attrs, const Tensor& coords, int T) {
@@ -554,10 +580,11 @@ void Glb::bake(const Tensor& attrs, const Tensor& coords, int T) {
   Tensor u8 = zeros({P * 6}, U8);
   k_to_u8<<<cdiv(L, 256), 256, 0, stream()>>>(samp.ptr<float>(), pix.ptr<int>(), L, P, u8.ptr<uint8_t>());
   std::vector<uint8_t> h;
+  dsync(); double t_tex = now_ms();  // "textures" stage: inpaint + pack + download
   auto rgb = [&] { std::vector<uint8_t> o(P * 3); for (i64 i = 0; i < P * 3; i++) o[i] = h[(i % 3) * P + i / 3]; return from_host(o.data(), {T, T, 3}, U8); };
   if (fast_mode() && env("T2_TELEA_GPU", "1") == "1") {
     prof("bake gpu");
-    telea_gpu(flag, T, u8); h = to_host_vec<uint8_t>(u8);
+    telea_gpu(flag, T, u8); if (dbg) h = to_host_vec<uint8_t>(u8);
   } else {
     h = to_host_vec<uint8_t>(u8); auto hf = to_host_vec<int>(flag);
     std::vector<uint8_t> inv(P); for (i64 i = 0; i < P; i++) inv[i] = !hf[i];
@@ -575,9 +602,13 @@ void Glb::bake(const Tensor& attrs, const Tensor& coords, int T) {
     tap("glb/inpaint0", rgb());
     for (int k = 1; k < 4; k++) tap("glb/inpaint" + std::to_string(k), from_host(h.data() + P * (2 + k), {T, T}, U8));
   }
+  // pack on device (same bytes as the host loop): baseColor RGBA, metallicRoughness (0, roughness, metallic)
+  Tensor hd = h.empty() ? u8 : from_host(h.data(), {P * 6}, U8), pk = empty({P * 7}, U8);
+  k_pack_tex<<<cdiv(P, 256), 256, 0, stream()>>>(hd.ptr<uint8_t>(), P, pk.ptr<uint8_t>(), pk.ptr<uint8_t>() + P * 4);
   base_rgba.resize(P * 4); mr_rgb.resize(P * 3);
-  for (i64 i = 0; i < P; i++) {
-    for (int c = 0; c < 3; c++) base_rgba[i * 4 + c] = h[c * P + i];
-    base_rgba[i * 4 + 3] = h[P * 5 + i]; mr_rgb[i * 3] = 0; mr_rgb[i * 3 + 1] = h[P * 4 + i]; mr_rgb[i * 3 + 2] = h[P * 3 + i];
-  }
+  CK(cudaMemcpyAsync(base_rgba.data(), pk.p, P * 4, cudaMemcpyDeviceToHost, stream()));
+  CK(cudaMemcpyAsync(mr_rgb.data(), pk.ptr<uint8_t>() + P * 4, P * 3, cudaMemcpyDeviceToHost, stream()));
+  dsync();
+  prof("pack");
+  tex_ms = now_ms() - t_tex;
 }

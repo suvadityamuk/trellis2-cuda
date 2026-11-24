@@ -86,6 +86,7 @@ struct Glb {
   // UV raster (nvdiffrast) -> reproject onto V0/F0 -> trilinear grid_sample_3d (FlexGEMM) -> uint8 -> cv2 TELEA inpaint
   void bake(const Tensor& attrs, const Tensor& coords, int tex = 4096);  // attrs fp32 [M,6], coords int32 [M,3] or [M,4] (0,x,y,z)
   int tex = 0; std::vector<uint8_t> base_rgba, mr_rgb;                   // baseColor RGBA, metallicRoughness (0, R, M)
+  double tex_ms = 0;                                                      // part of bake() spent in inpaint + pack + download
   std::string glb_bytes() const;                                          // trimesh export(extension_webp=True)
   void save(const std::string& path) const;
  private:

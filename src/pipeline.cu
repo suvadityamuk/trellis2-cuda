@@ -87,12 +87,14 @@ Pipeline::Out Pipeline::run(const Image8& rgba, uint64_t seed) {
   tap("tex/slat.feats", t); tm("tex_slat");
 
   Out o; std::vector<Tensor> subs; Tensor co;
-  Tensor h = shd.run(s, coords, nullptr, &subs, -1, &co);
-  fdg_to_mesh(h, co, 1024, o.V, o.F);
+  static bool pon = env("T2_PROF") == "1"; double pt = 0; if (pon) { dsync(); pt = now_ms(); }
+  auto sub = [&](const char* n) { if (pon) { dsync(); double x = now_ms(); printf("    %-24s %8.1f ms\n", n, x - pt); pt = x; } };
+  Tensor h = shd.run(s, coords, nullptr, &subs, -1, &co); sub("shape decoder");
+  fdg_to_mesh(h, co, 1024, o.V, o.F); sub("fdg_to_mesh");
   tap("dec_shape/v", o.V); tap("dec_shape/f", o.F);
   o.attrs = txd.run(t, coords, &subs, nullptr, -1, &o.coords);
-  scale_(o.attrs, 0.5f, 0.5f);
-  fill_holes(o.V, o.F, 3e-2f);
+  scale_(o.attrs, 0.5f, 0.5f); sub("tex decoder");
+  fill_holes(o.V, o.F, 3e-2f); sub("fill_holes");
   tap("final/v", o.V); tap("final/f", o.F); tap("final/attrs", o.attrs); tm("decode");
   return o;
 }
