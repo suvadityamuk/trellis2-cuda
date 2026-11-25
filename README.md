@@ -18,7 +18,7 @@
 </p>
 
 ```bash
-T2_FAST=1 ./build/t2 image.png out.glb
+python scripts/infer.py image.png -o out.glb
 ```
 
 You get `out.glb`: a remeshed, simplified, UV-unwrapped mesh with baked PBR textures, the same file the official
@@ -50,38 +50,47 @@ GLBs.
 
 <!-- SPACE_SCREENSHOT -->
 
-## Build
+## Install
 
-You need Linux x86_64, CUDA 12.4 or newer, cuDNN 9, CMake ≥ 3.24, Ninja, and an sm_90 GPU for the default build
-(FlashAttention-3 is sm_90a; the sm_120 build with FlashAttention-2 is under [The Space](#the-space)).
+You need Linux x86_64, an NVIDIA H200/H100 (sm_90) or RTX PRO 6000 / RTX 50-series (sm_120) GPU, CUDA 12.4 or newer
+(12.8 for sm_120) with `nvcc`, cuDNN 9, CMake ≥ 3.24, Ninja, git and Python 3. The DINOv3 image encoder is gated:
+accept its licence on [its Hub page](https://huggingface.co/facebook/dinov3-vitl16-pretrain-lvd1689m) first.
 
 ```bash
 git clone https://github.com/suvadityamuk/trellis2-cuda && cd trellis2-cuda
-tools/build.sh build          # fetches pinned third-party sources, builds build/t2 and build/parity
+pip install huggingface_hub pillow     # rembg onnxruntime too, to accept images without a transparent background
+hf auth login                          # or export HF_TOKEN=...
 ```
-
-Checkpoints are read from `$T2_CKPT` (default `/workspace/ckpts`) as safetensors from
-[microsoft/TRELLIS.2-4B](https://huggingface.co/microsoft/TRELLIS.2-4B),
-[microsoft/TRELLIS-image-large](https://huggingface.co/microsoft/TRELLIS-image-large) (the sparse-structure decoder)
-and [DINOv3 ViT-L/16](https://huggingface.co/facebook/dinov3-vitl16-pretrain-lvd1689m) (gated). `space/app.py` lists
-the exact files and the names the loader expects.
 
 ## Usage
 
 ```bash
-./build/t2 image.png out.glb [seed]                # parity build: bitwise identical to the official pipeline
-T2_FAST=1 ./build/t2 image.png out.glb             # fast build
-T2_FAST=1 T2_PROF=1 ./build/t2 image.png out.glb   # with per-stage and sub-stage timing
-./build/t2 --bench out.json out_dir img...         # timing as in tools/bench_ref.py
+python scripts/infer.py image.png -o out.glb             # fast build
+python scripts/infer.py image.png -o out.glb --parity    # bitwise identical to the official pipeline
+python scripts/infer.py image.png -o out.glb --seed 7    # another sample of the same image
+python scripts/infer.py image.png -o out.glb --profile   # per-stage and sub-stage times
 ```
 
-The input needs a foreground mask: a transparent background is used as is (the Space removes other backgrounds with
-rembg first). Switches, all environment variables:
+The first call builds the binary for your GPU (`tools/build.sh` fetches the pinned third-party sources and compiles
+`build/t2`; 10-20 minutes) and downloads the checkpoints (about 16 GB) into `~/.cache/trellis2-cuda/ckpts`, linked
+under the names the loader expects. Later calls only run the binary. The input needs a foreground mask: a
+transparent background is used as is; otherwise the script removes the background with rembg if it is installed.
+
+The binary can also be built and called directly:
+
+```bash
+tools/build.sh build                                      # sm_90; for sm_120: T2_CMAKE_ARGS=-DT2_CUDA_ARCH=120 tools/build.sh build120
+T2_CKPT=~/.cache/trellis2-cuda/ckpts ./build/t2 image.png out.glb [seed]            # parity build
+T2_CKPT=~/.cache/trellis2-cuda/ckpts T2_FAST=1 ./build/t2 image.png out.glb         # fast build
+T2_CKPT=~/.cache/trellis2-cuda/ckpts ./build/t2 --bench out.json out_dir img...     # timing as in tools/bench_ref.py
+```
+
+Switches, all environment variables:
 
 | variable | default | what |
 |---|---|---|
 | `T2_FAST` | 0 | 1 = fast build |
-| `T2_CKPT` | `/workspace/ckpts` | checkpoint directory |
+| `T2_CKPT` | `/workspace/ckpts` (`scripts/infer.py`: `~/.cache/trellis2-cuda/ckpts`) | checkpoint directory |
 | `T2_FLEXGEMM_CACHE` | `assets/flexgemm_autotune.json` | sparse-conv tile choices shared with the official side, for parity |
 | `T2_PROF`, `T2_DITPROF`, `T2_DECPROF` | 0 | stage, per-op DiT and per-level decoder timing |
 | `T2_DIT_FUSE`, `T2_DIT_GELU_EPI` | 1 | fast build: fused DiT kernels, GELU in the GEMM epilogue |
@@ -277,7 +286,8 @@ tools/make_space.sh build120 <TRELLIS.2 checkout>
 |---|---|
 | `src/` | models (DINOv3, flow DiTs, sparse-structure, shape and texture decoders), GEMM / attention / sparse-conv ops, the `to_glb` port (`glb.cu`), OpenCV TELEA (`inpaint.cpp`), the glTF writer (`gltf.cpp`), grouped xatlas (`uv_atlas.cpp`) |
 | `apps/` | `t2.cu` (the binary), `parity.cu` (per-stage bitwise checks against dumps from `tools/ref_dump.py`), `t2lib.cu` (the C library) |
-| `tools/` | offline Python: reference dumps, official timing, GLB comparison, plots and renders, build and Space scripts |
+| `scripts/` | `infer.py`: one-command inference (checkpoints, build, run) |
+| `tools/` | `build.sh` (fetch pinned sources, build), offline Python: reference dumps, official timing, GLB comparison, plots and renders, build and Space scripts |
 | `bench/` | raw timings and comparison outputs |
 | `assets/` | `flexgemm_autotune.json`, the sparse-conv tile choices shared by both sides |
 | `hub/trellis2-kernels/` | the Kernel Hub package (`mesh_udf`, `telea_inpaint`), Apache-2.0 |
