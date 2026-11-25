@@ -32,8 +32,8 @@ def _preload_cuda_libs(lib_dirs=None):
 class T2:
     def __init__(self, ckpt_dir, lib_path=os.path.join(HERE, "lib", "libt2.so"), fast=True, cuda_lib_dirs=None):
         os.environ["T2_FAST"] = "1" if fast else "0"
-        # The GPU TELEA inpaint faults on sm_120 (fine on sm_90); use the exact CPU inpaint there.
-        os.environ.setdefault("T2_TELEA_GPU", "0")
+        # GPU TELEA inpaint (32-bit indices; runs on sm_120). Set T2_TELEA_GPU=0 for the exact CPU inpaint.
+        os.environ.setdefault("T2_TELEA_GPU", "1")
         os.environ.setdefault("T2_FLEXGEMM_CACHE", os.path.join(HERE, "assets", "flexgemm_autotune.json"))
         _preload_cuda_libs(cuda_lib_dirs)
         lib = ctypes.CDLL(lib_path)

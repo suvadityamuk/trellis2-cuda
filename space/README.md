@@ -30,9 +30,12 @@ simplification and texture baking), once by the official PyTorch code.
   the GPU, like the port's weight load, is reported but not counted.
 
 - `lib/libt2.so` is the port's fast build compiled for sm_120 (the RTX PRO 6000 Blackwell behind ZeroGPU), with
-  FlashAttention-2 in place of the Hopper-only FlashAttention-3, and the exact CPU TELEA texture inpaint (the fast
-  build's GPU inpaint faults on sm_120). On a full RTX PRO 6000 its GLBs stay within the official torch.compile-vs-eager
-  spread of the exact build (Chamfer ≤ 1.4e-3 of the bbox diagonal, base-color L1 ≤ 5.9/255 on the five examples).
+  FlashAttention-2 in place of the Hopper-only FlashAttention-3 and the fast build's GPU TELEA texture inpaint (0.3 s
+  instead of 7-9 s for the CPU inpaint). On a full RTX PRO 6000 it takes 10-45 s per example at 1M faces / 4096².
+  An earlier sm_120 build with the CPU inpaint stayed within the official torch.compile-vs-eager spread of the exact
+  build (Chamfer ≤ 1.4e-3 of the bbox diagonal, base-color L1 ≤ 5.9/255 on the five examples); this build with the
+  GPU inpaint and the same build with the CPU inpaint differ by Chamfer ≤ 2.0e-3 and L1 ≤ 7.3/255, which includes
+  the fast build's run-to-run variation.
 - Inputs need a foreground mask: a transparent background is used as is, otherwise rembg (u2net, CPU) removes it.
 - Example images are from the [TRELLIS.2 repository](https://github.com/microsoft/TRELLIS.2) (MIT).
 

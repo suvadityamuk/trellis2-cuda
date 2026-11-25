@@ -202,8 +202,8 @@ the vertex normals. A new image or GPU needs one official run first, to add its 
   stays within the torch.compile-vs-eager spread of the exact build.
   The sm_120 fault was a ptxas 12.8 miscompile of the TELEA fill kernel at `-O1` and above when its indices are 64-bit
   (sm_90/sm_100 targets and `-Xptxas -O0` are fine). The kernel now uses 32-bit indices with clamped loads, gives the
-  same bytes on sm_90, and runs on an RTX PRO 6000 (T.png: 74 ms vs 6.5 s for the CPU inpaint). The Space still sets
-  `T2_TELEA_GPU=0` until it is rebuilt from this tree.
+  same bytes on sm_90, and runs on an RTX PRO 6000 (T.png: 74 ms vs 6.5 s for the CPU inpaint). The Space runs a
+  build of this tree with the GPU TELEA on: 10-45 s per example on a full RTX PRO 6000 at 4096² / 1M faces.
 
 Third-party CUDA code is reused unmodified: flash-attention 2.7.3 (FA2 + FA3), CuMesh, cuBVH, xatlas, FlexGEMM,
 nvdiffrast 0.4.0, cudnn-frontend, cutlass, and libwebp 1.4.0.
