@@ -76,7 +76,15 @@ The first call builds the binary for your GPU (`tools/build.sh` fetches the pinn
 under the names the loader expects. Later calls only run the binary. The input needs a foreground mask: a
 transparent background is used as is; otherwise the script removes the background with rembg if it is installed.
 
-The binary can also be built and called directly:
+### Pure C++, without the script
+
+The whole image-to-GLB path is one C++/CUDA program, [`apps/t2.cu`](apps/t2.cu): it loads the image, runs
+`Pipeline::run` ([`src/pipeline.cu`](src/pipeline.cu): DINOv3, flow transformers, decoders), then remesh, simplify,
+UV unwrap, bake and GLB export ([`src/glb.cu`](src/glb.cu)), with no Python at runtime. The `build/` folder is not in
+the repository (it is git-ignored): `tools/build.sh build` creates it at the repository root and writes
+`build/t2` (that program), `build/libt2.so` (the same pipeline as a C library) and `build/parity` (the bitwise
+checker). Checkpoints must be in `$T2_CKPT` under the names listed in `WEIGHTS` in
+[`scripts/infer.py`](scripts/infer.py); running the script once puts them in `~/.cache/trellis2-cuda/ckpts`.
 
 ```bash
 tools/build.sh build                                      # sm_90; for sm_120: T2_CMAKE_ARGS=-DT2_CUDA_ARCH=120 tools/build.sh build120
@@ -285,7 +293,7 @@ tools/make_space.sh build120 <TRELLIS.2 checkout>
 | path | what |
 |---|---|
 | `src/` | models (DINOv3, flow DiTs, sparse-structure, shape and texture decoders), GEMM / attention / sparse-conv ops, the `to_glb` port (`glb.cu`), OpenCV TELEA (`inpaint.cpp`), the glTF writer (`gltf.cpp`), grouped xatlas (`uv_atlas.cpp`) |
-| `apps/` | `t2.cu` (the binary), `parity.cu` (per-stage bitwise checks against dumps from `tools/ref_dump.py`), `t2lib.cu` (the C library) |
+| `apps/` | `t2.cu` (the end-to-end C++ program, built as `build/t2`), `parity.cu` (per-stage bitwise checks against dumps from `tools/ref_dump.py`), `t2lib.cu` (the C library) |
 | `scripts/` | `infer.py`: one-command inference (checkpoints, build, run) |
 | `tools/` | `build.sh` (fetch pinned sources, build), offline Python: reference dumps, official timing, GLB comparison, plots and renders, build and Space scripts |
 | `bench/` | raw timings and comparison outputs |
