@@ -96,4 +96,9 @@ std::string Glb::glb_bytes() const {
   uint32_t hdr[5] = {0x46546C67u, 2, (uint32_t)(js.size() + bin.size() + 28), (uint32_t)js.size(), 0x4E4F534Au}, bh[2] = {(uint32_t)bin.size(), 0x004E4942u};
   return raw(hdr, 20) + js + raw(bh, 8) + bin;
 }
-void Glb::save(const std::string& path) const { std::ofstream(path, std::ios::binary) << glb_bytes(); }
+void Glb::save(const std::string& path) const {
+  std::ofstream o(path, std::ios::binary);
+  REQ(o, "cannot write %s (does its directory exist?)", path.c_str());
+  o << glb_bytes();
+  REQ(o.good(), "write failed: %s", path.c_str());
+}

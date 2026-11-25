@@ -112,6 +112,7 @@ def main():
     build_dir = os.path.abspath(a.build_dir or os.path.join(ROOT, "build" if arch == "90" else f"build{arch}"))
     exe = binary(build_dir, arch, a.rebuild)
     checkpoints(a.ckpt)
+    os.makedirs(os.path.dirname(out), exist_ok=True)
     image = cut_out(a.image, os.path.splitext(out)[0] + "_input.png")
 
     env = dict(os.environ, T2_CKPT=a.ckpt, T2_FAST="0" if a.parity else "1")
