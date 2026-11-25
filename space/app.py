@@ -179,7 +179,7 @@ def card(impl, state):
     elif status == "waiting":
         big, cls, note = "Next", " is-word is-dim", "starts when trellis2-cuda finishes"
     elif status == "skipped":
-        big, cls, note = "Not run", " is-word is-dim", "Compare runs both"
+        big, cls, note = "Not run", " is-word is-dim", st.get("why", "Compare runs both")
     elif status == "failed":
         big, cls, note = "Failed", " is-word is-dim", html.escape(st.get("error", ""))[:160]
     else:
@@ -258,9 +258,13 @@ def generate(img, seed, randomize, faces, texture, compare=True):
                     files[impl] = ev[1]["glb"]
                 yield emit()
         except Exception as e:  # noqa: BLE001
-            if impl == "cuda":
-                raise
-            state[impl] = {"status": "failed", "error": str(e)}
+            msg = str(e) or type(e).__name__
+            state[impl] = {"status": "failed", "error": msg}
+            if impl == "cuda":  # nothing to compare against: show it on the card, then as a toast
+                if compare:
+                    state["torch"] = {"status": "skipped", "why": "not run: trellis2-cuda did not finish"}
+                yield emit()
+                raise gr.Error(msg) from e
             yield emit()
 
 
