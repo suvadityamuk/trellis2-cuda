@@ -1,212 +1,288 @@
-# TRELLIS.2 in CUDA C++
+<h1 align="center">trellis2-cuda</h1>
 
-Image → textured GLB for [TRELLIS.2-4B](https://github.com/microsoft/TRELLIS.2) (`1024_cascade`, `example.py` `to_glb` settings),
-with no Python at runtime. Two builds from one binary:
+<p align="center">
+  <b>One image in, a textured 3D mesh out, 9.1× faster than the official PyTorch pipeline on an H200.</b><br>
+  TRELLIS.2-4B rebuilt in CUDA C++ with no Python at runtime: a bitwise-identical parity build and a fast build.
+</p>
 
-- **parity** (default): bitwise identical to the official PyTorch pipeline from the input image to the final mesh and attributes,
-  and through the GLB writer (texture bake, TELEA inpaint, WebP, glTF bytes). The one exception is the vertex-normal buffer:
-  CuMesh accumulates normals with atomics, so the official code is nondeterministic there too.
-- **fast** (`T2_FAST=1`): tolerance-bounded; see below.
+<p align="center">
+  <img alt="NVIDIA CUDA" src="https://img.shields.io/badge/CUDA-sm__90%20%C2%B7%20sm__120-76b900?style=flat-square&logo=nvidia">
+  <a href="https://huggingface.co/microsoft/TRELLIS.2-4B"><img alt="Model" src="https://img.shields.io/badge/%F0%9F%A4%97%20model-microsoft%2FTRELLIS.2--4B-ffcc4d?style=flat-square"></a>
+  <a href="https://huggingface.co/kernels/suvadityamuk/trellis2-cuda"><img alt="Kernels" src="https://img.shields.io/badge/%F0%9F%A4%97%20kernels-suvadityamuk%2Ftrellis2--cuda-ffcc4d?style=flat-square"></a>
+  <a href="https://huggingface.co/spaces/suvadityamuk/trellis2-cuda"><img alt="Space" src="https://img.shields.io/badge/%F0%9F%A4%97%20Space-trellis2--cuda-ffcc4d?style=flat-square"></a>
+  <img alt="License" src="https://img.shields.io/badge/license-Apache--2.0-3b5f8a?style=flat-square">
+</p>
+
+<p align="center">
+  <img src="docs/renders.png" alt="Five example images, each followed by the GLB from official eager PyTorch, official torch.compile, the CUDA parity build and the CUDA fast build, rendered with the same camera" width="100%">
+</p>
+
+```bash
+T2_FAST=1 ./build/t2 image.png out.glb
+```
+
+You get `out.glb`: a remeshed, simplified, UV-unwrapped mesh with baked PBR textures, the same file the official
+`example.py` writes with its `to_glb` settings (`1024_cascade`, 1M faces, 4096² textures). Each row above is one
+input image, then the official eager, official torch.compile, CUDA parity and CUDA fast results, all rendered from the
+exported files with the same camera.
+
+## Why
+
+[TRELLIS.2](https://github.com/microsoft/TRELLIS.2) turns one image into a textured 3D asset. Its official pipeline is
+PyTorch plus a stack of CUDA extensions, and most of its time is not in the neural networks at all: 339 of 558 s
+over the five example images is `to_glb` (remeshing, simplification, UV unwrapping, texture baking), much of it serial
+CPU work. trellis2-cuda runs the whole request, from the image encoder to the glTF bytes, as one C++/CUDA program:
+
+| H200, 5 example images, image to GLB | seconds (sum) | speed-up |
+|---|---:|---:|
+| official PyTorch, eager | 558.4 | 1.0× |
+| official PyTorch, eager, warm autotune cache | 512.0 | 1.1× |
+| official PyTorch, torch.compile | 472.7 | 1.2× |
+| trellis2-cuda parity build (bitwise identical to eager) | 242.9 | 2.3× |
+| **trellis2-cuda fast build** | **61.4** | **9.1×** |
+
+Warm process, one warm-up, model loading excluded, all rows measured in one H200 job. Per-image tables, the first
+session and the compute cost: [docs/benchmark.md](docs/benchmark.md).
+
+Try it without building anything in the [Space](https://huggingface.co/spaces/suvadityamuk/trellis2-cuda): it runs
+the same image through the official PyTorch code and the fast build on the same GPU and shows both times and both
+GLBs.
+
+<!-- SPACE_SCREENSHOT -->
+
+## Build
+
+You need Linux x86_64, CUDA 12.4 or newer, cuDNN 9, CMake ≥ 3.24, Ninja, and an sm_90 GPU for the default build
+(FlashAttention-3 is sm_90a; the sm_120 build with FlashAttention-2 is under [The Space](#the-space)).
+
+```bash
+git clone https://github.com/suvadityamuk/trellis2-cuda && cd trellis2-cuda
+tools/build.sh build          # fetches pinned third-party sources, builds build/t2 and build/parity
+```
+
+Checkpoints are read from `$T2_CKPT` (default `/workspace/ckpts`) as safetensors from
+[microsoft/TRELLIS.2-4B](https://huggingface.co/microsoft/TRELLIS.2-4B),
+[microsoft/TRELLIS-image-large](https://huggingface.co/microsoft/TRELLIS-image-large) (the sparse-structure decoder)
+and [DINOv3 ViT-L/16](https://huggingface.co/facebook/dinov3-vitl16-pretrain-lvd1689m) (gated). `space/app.py` lists
+the exact files and the names the loader expects.
+
+## Usage
+
+```bash
+./build/t2 image.png out.glb [seed]                # parity build: bitwise identical to the official pipeline
+T2_FAST=1 ./build/t2 image.png out.glb             # fast build
+T2_FAST=1 T2_PROF=1 ./build/t2 image.png out.glb   # with per-stage and sub-stage timing
+./build/t2 --bench out.json out_dir img...         # timing as in tools/bench_ref.py
+```
+
+The input needs a foreground mask: a transparent background is used as is (the Space removes other backgrounds with
+rembg first). Switches, all environment variables:
+
+| variable | default | what |
+|---|---|---|
+| `T2_FAST` | 0 | 1 = fast build |
+| `T2_CKPT` | `/workspace/ckpts` | checkpoint directory |
+| `T2_FLEXGEMM_CACHE` | `assets/flexgemm_autotune.json` | sparse-conv tile choices shared with the official side, for parity |
+| `T2_PROF`, `T2_DITPROF`, `T2_DECPROF` | 0 | stage, per-op DiT and per-level decoder timing |
+| `T2_DIT_FUSE`, `T2_DIT_GELU_EPI` | 1 | fast build: fused DiT kernels, GELU in the GEMM epilogue |
+| `T2_TELEA_GPU` | 1 | fast build: GPU texture inpainting instead of the CPU TELEA |
+| `T2_XA_SPLIT` | 1024 | fast build: chart size above which charts are split before xatlas |
+| `T2_WEBP_ALPHA_Q` | 0 | fast build: WebP quality of the base-color alpha plane (the material is opaque) |
+
+The pipeline is also a C library (`libt2.so`: `t2_load`, `t2_image_to_glb`, `t2_last_error`, see `apps/t2lib.cu`);
+`space/t2.py` wraps it with ctypes.
+
+**Two kernels on the Kernel Hub.** The GPU BVH and the wavefront TELEA inpaint are packaged for PyTorch as
+[suvadityamuk/trellis2-cuda](https://huggingface.co/kernels/suvadityamuk/trellis2-cuda) (source in
+`hub/trellis2-kernels/`, 17 builds for torch 2.10-2.15 and CUDA 12.6-13.4):
+
+```python
+from kernels import get_kernel  # pip install -U kernels
+
+k = get_kernel("suvadityamuk/trellis2-cuda", version=1, trust_remote_code=True)
+dist, face_id, bary = k.mesh_udf(vertices, faces, points)   # point-to-mesh distance, nearest face, barycentrics
+filled = k.telea_inpaint(image, mask, radius=3)             # a GPU alternative to cv2.inpaint(..., INPAINT_TELEA)
+```
+
+## How it works
+
+```mermaid
+flowchart LR
+    A["image"] --> B["DINOv3<br/>features"]
+    B --> C["sparse-structure<br/>flow DiT + decoder"]
+    C --> D["shape flow DiTs<br/>512 → 1024 cascade"]
+    D --> E["texture flow DiT"]
+    E --> F["shape + texture<br/>sparse decoders"]
+    F --> G["to_glb: remesh, simplify,<br/>UV unwrap, bake, inpaint"]
+    G --> H["GLB writer<br/>(WebP textures)"]
+```
+
+Every stage is C++/CUDA: DINOv3, the flow transformers and their samplers, the sparse-convolution decoders,
+FlexGEMM's submanifold convolution, the `to_glb` post-processing (CuMesh, cuBVH, xatlas, nvdiffrast for the bake),
+OpenCV's TELEA inpaint and the trimesh/PIL glTF writer. Third-party CUDA code (flash-attention, CuMesh, cuBVH,
+xatlas, FlexGEMM, nvdiffrast, cudnn-frontend, cutlass, libwebp) is reused unmodified. The parts written by hand are
+those where matching torch exactly needed control over operation order: elementwise ops and norms, the sparse-conv MMA
+kernel, sampling, preprocessing, the RNG, TELEA and the GLB writer.
 
 The full worklog (method, bugs, figures) is in [docs/blog.md](docs/blog.md).
 
-## Results (H200, 5 example images, warm process, 1 warmup, seconds)
+## Optimizations: where the time went
 
-Second benchmark session, after the end-to-end optimizations of the fast build (all six columns measured in one H200 job;
-the first session's table is kept below):
+The official pipeline spends 61% of its time in `to_glb`, after the networks have finished. Sums over the five
+images, H200:
 
-| Image | Official eager | Official eager, warm autotune | Official torch.compile | CUDA parity | CUDA fast (before) | CUDA fast |
-|---|---|---|---|---|---|---|
-| 0a34 | 84.7 | 79.4 | 90.6 | 46.8 | 16.5 | **9.6** |
-| 0e49 | 160.5 | 136.0 | 124.8 | 60.5 | 34.3 | **19.3** |
-| 0f16 | 88.8 | 119.5 | 97.7 | 50.0 | 22.0 | **13.4** |
-| 130c | 131.8 | 74.2 | 77.3 | 27.3 | 13.0 | **6.7** |
-| T.png | 92.6 | 102.9 | 82.3 | 58.2 | 20.3 | **12.4** |
-| **Sum** | 558.4 | 512.0 | 472.7 | 242.9 (2.3×) | 106.1 (5.3×) | **61.4 (9.1×)** |
-| pipeline / `to_glb` / export | 176.5 / 338.6 / 43.2 | 76.4 / 395.1 / 40.6 | 87.3 / 343.2 / 42.2 | 65.4 / 149.4 / 28.2 | 50.4 / 48.4 / 7.3 | 43.4 / 15.2 / 2.8 |
+| stage | official eager | CUDA parity | CUDA fast |
+|---|---:|---:|---:|
+| pipeline (encoder, flow DiTs, decoders) | 176.5 s | 65.4 s | 43.4 s |
+| `to_glb` (remesh, simplify, UV unwrap, bake) | 338.6 s | 149.4 s | 15.2 s |
+| GLB export | 43.2 s | 28.2 s | 2.8 s |
+| **total** | **558.4 s** | **242.9 s** | **61.4 s** |
 
-"Official eager" starts from an empty FlexGEMM autotune cache, as in the first session; its `pipeline` time includes Triton
-autotuning on first-seen sparse-conv shapes (0e49, 130c). "Warm autotune" is the same run repeated with the cache it
-left behind, and torch.compile also ran with that cache. Against warm eager the fast build is 8.3×. The official `to_glb`
-time varies by tens of seconds between runs of the same image (xatlas), which is why warm eager is slower than cold
-eager on 0f16 and T.png. "CUDA fast (before)" is the previous fast build (git `4b7c7cd`) built and run in the same job.
-Raw numbers: `bench/{eager_v2,eager_warm_v2,compile_v2,cuda_v2,fast_old,fast_v2}.json`; plots `docs/speedup_v2.png`, `docs/timing_v2.png`.
+The parity build is already 2.3× faster with the same arithmetic: most of that is in `to_glb`, where xatlas's thread
+pool is sized to the container's CPU quota (bitwise-safe); the rest is the Python overhead removed from around the
+same kernels, and no per-shape autotuning. The fast build then changes how the work is done, in two rounds.
 
-Per-stage sums over the 5 images for the new fast build (`stages` in `bench/fast_v2.json`):
+First round (single image, T.png):
 
-| cond | sparse_structure | shape_slat | tex_slat | decode | remesh | simplify | uv_unwrap | bake | textures | export |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 0.90 | 2.94 | 23.00 | 11.39 | 5.17 | 0.75 | 1.69 | 11.16 | 0.80 | 0.79 | 2.83 |
-
-### First session
-
-
-| Image | Official eager | Official torch.compile | CUDA parity | CUDA fast |
-|---|---|---|---|---|
-| 0a34 | 89.0 | 89.1 | 41.3 | **16.3** |
-| 0e49 | 154.2 | 131.2 | 65.8 | **34.4** |
-| 0f16 | 86.9 | 89.6 | 54.2 | **22.4** |
-| 130c | 143.6 | 81.1 | 29.6 | **13.4** |
-| T.png | 92.8 | 86.8 | 70.0 | **20.2** |
-| **Sum** | 566.5 | 477.8 | 260.9 (2.2×) | **106.6 (5.3×)** |
-
-Times are pipeline + `to_glb` + export, with model loading excluded. Raw numbers are in `bench/*.json`. Speedups are relative to eager.
-
-![total time](docs/speedup.png)
-
-![per-image stage breakdown](docs/timing.png)
-
-Most of the official time is in `to_glb`: a serial CPU cuBVH build, quadratic xatlas chart growth, and single-threaded TELEA.
-The large eager `pipeline` times on 0e49 and 130c are FlexGEMM's Triton autotuning on first-seen sparse-conv shapes.
-The torch.compile run came afterwards and reused that saved cache (`~/.flex_gemm/autotune_cache.json`). The CUDA build
-has no per-shape tuning step.
-
-## Outputs
-
-Rendered with nvdiffrast from the exported GLBs (base color with simple shading, same camera; `tools/render_glb.py`):
-
-![renders](docs/renders.png)
-
-Turntable of the CUDA fast output for `T.png`:
-
-![turntable](docs/T_fast.gif)
-
-## Fast build
-
-| Change | Effect (T.png) |
+| change | effect |
 |---|---|
-| GPU LBVH (Morton + radix sort + Karras tree) instead of cuBVH's CPU build | 7.1 s → 5 ms, remesh still bitwise |
-| Split CuMesh charts > 1024 faces before xatlas (its chart growth is quadratic and serial per mesh) | ComputeCharts 36 s → 1.3 s, ~1% more charts |
-| GPU wavefront TELEA (per distance level, all 6 channels) | 8.2 s → 0.15 s |
-| FlashAttention-3 (hopper, bf16 hdim128) for all DiT attention | shape 7.7 → 5.6 s, tex 3.7 → 2.6 s |
+| GPU linear BVH (Morton codes, radix sort, Karras tree) instead of cuBVH's CPU build | remesh BVH 7.1 s → 5 ms, remesh still bitwise |
+| Split CuMesh charts above 1,024 faces before xatlas (its chart growth is quadratic and serial per mesh) | ComputeCharts 36 s → 1.3 s, about 1% more charts |
+| GPU wavefront TELEA: every pixel at the same distance level filled in parallel, all 6 channels at once | inpaint 8.2 s → 0.15 s |
+| FlashAttention-3 (Hopper, bf16, head dim 128) for all DiT attention | shape DiT 7.7 → 5.6 s, texture DiT 3.7 → 2.6 s |
 | WebP method 0 | export 6.0 → 1.4 s |
 
-End-to-end optimizations added in the second session (sums over the 5 images, previous fast build → now):
+Second round (sums over the five images, previous fast build → current):
 
-| Change | Effect |
+| change | effect |
 |---|---|
-| Grouped parallel xatlas (`src/uv_atlas.cpp`): pieces dealt into 64 area-balanced groups, one Atlas per group on native threads with a shared texel scale, results shelf-tiled; thread pool sized from the cgroup CPU quota | uv_unwrap 32.6 → 11.2 s (the "before" stage numbers are from a `T2_PROF=1` run of the previous build earlier in the same job) |
-| CuMesh pooled device allocator (`third_party/shim/cm_alloc.h`) and device-side `Buffer::fill`; no arithmetic change, so both builds use it | simplify 12.2 → 1.7 s, remesh 1.4 → 0.75 s |
-| DiT: fused LayerNorm+modulate, QK-RMSNorm+RoPE+pack and gated-residual+LayerNorm kernels (`T2_DIT_FUSE`, default 1), GELU in the cuBLASLt GEMM epilogue (`T2_DIT_GELU_EPI`, default 1) | pipeline 50.4 → 43.4 s |
-| Export: GPU texture packing, base-color WebP alpha plane at quality 0 (`T2_WEBP_ALPHA_Q`; the material is opaque) | export 7.3 → 2.8 s, bake+textures 2.0 → 1.6 s |
+| Grouped parallel xatlas (`src/uv_atlas.cpp`): pieces dealt into 64 area-balanced groups, one atlas per group on its own thread with a shared texel scale, results shelf-packed | UV unwrap 32.6 → 11.2 s |
+| Pooled device allocator for CuMesh (`third_party/shim/cm_alloc.h`) and device-side buffer fills; no arithmetic change, so the parity build uses it too | simplify 12.2 → 1.7 s, remesh 1.4 → 0.75 s |
+| DiT kernels: fused LayerNorm + modulation, q/k RMSNorm + RoPE + packing, gated residual + LayerNorm; GELU in the cuBLASLt GEMM epilogue | pipeline 50.4 → 43.4 s |
+| GPU texture packing; base-color WebP alpha plane at quality 0 | export 7.3 → 2.8 s, bake + textures 2.0 → 1.6 s |
 
-Tried and not kept: batching CFG cond/uncond into one forward (FA3 and the GEMMs already run at ~600 TFLOP/s for the
-token counts where the DiT time is, so the bound is under 1 s over the 5 images); rewriting the sparse decoders (72% of
-their time is the spconv kernel itself); jemalloc/tcmalloc and group-count or thread-count sweeps for xatlas (it is
-CPU-bound in ComputeCharts on the 23-vCPU quota); a smaller chart split (`T2_XA_SPLIT=512` saves up to 30% of the
-xatlas time on one image for ~1% more charts, 256/128 more for 9-30% more charts; kept at 1024).
+Where the fast build's 61.4 s now goes (seconds):
 
-Profiling knobs: `T2_PROF=1` (stages and sub-stages), `T2_DITPROF=1` (per-op DiT time), `T2_DECPROF=1` (per-level decoder time).
+| image features | sparse structure | shape DiT | texture DiT | decoders | remesh | simplify | UV unwrap | bake | textures | export |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 0.90 | 2.94 | 23.00 | 11.39 | 5.17 | 0.75 | 1.69 | 11.16 | 0.80 | 0.79 | 2.83 |
 
-These also help parity mode without changing its output: xatlas sized to the cgroup CPU quota (`third_party/shim/xa_hw.h`).
+Tried and dropped, with the reason:
 
-**Tolerance gates.**
-1. DiT sampling error (teacher-forced, `parity sample`) matches the official pipeline's own error when its attention
-   backend is switched from flash_attn to xformers. Sparse-structure stage: mean abs 0.0145 / max 1.35 for both, and both
-   give 3534 tokens.
-2. End-to-end GLB vs official eager (`tools/compare_glb.py`: symmetric Chamfer distance over the bbox diagonal, and
-   base-color L1 at matched surface samples). The fast build falls in the band of official torch.compile vs eager:
+| idea | result |
+|---|---|
+| Batch the guidance passes (cond and uncond) into one forward | FlashAttention-3 and the GEMMs already run near 600 TFLOP/s at these token counts; the bound is under 1 s over the five images |
+| Rewrite the sparse decoders | 72% of their time is the sparse-conv kernel itself |
+| jemalloc / tcmalloc, group-count and thread-count sweeps for xatlas | no gain: xatlas is CPU-bound in ComputeCharts on the 23-vCPU quota |
+| Smaller chart split (`T2_XA_SPLIT` 512 / 256 / 128) | up to 30% less xatlas time on one image for 1% more charts at 512, 9-30% more charts below; kept at 1024 |
 
-| Image | compile vs eager (Chamfer / color) | parity vs eager | fast vs eager |
+<a id="results-h200-5-example-images-warm-process-1-warmup-seconds"></a>
+## Benchmark
+
+<p align="center">
+  <img src="docs/speedup_v2.png" alt="Bar chart of total seconds over the five example images on an H200: official eager 558, official eager with warm autotune cache 512, official torch.compile 473, CUDA parity 243, previous CUDA fast 106, CUDA fast 61" width="820">
+</p>
+
+One HF Jobs H200 session (1× H200, 23 vCPU), all builds in one job, warm process, one warm-up, model loading
+excluded, image to written GLB, seconds:
+
+| image | official eager | official torch.compile | CUDA parity | CUDA fast |
+|---|---:|---:|---:|---:|
+| 0a34 | 84.7 | 90.6 | 46.8 | **9.6** |
+| 0e49 | 160.5 | 124.8 | 60.5 | **19.3** |
+| 0f16 | 88.8 | 97.7 | 50.0 | **13.4** |
+| 130c | 131.8 | 77.3 | 27.3 | **6.7** |
+| T.png | 92.6 | 82.3 | 58.2 | **12.4** |
+| **sum** | 558.4 | 472.7 | 242.9 (2.3×) | **61.4 (9.1×)** |
+
+"Official eager" starts from an empty FlexGEMM autotune cache, as a fresh install does; its time on 0e49 and 130c
+includes Triton autotuning. Against eager with a warm cache (512.0 s) the fast build is 8.3×. The official `to_glb`
+time varies by tens of seconds between runs of the same image (xatlas). Warm-cache numbers, the previous fast build,
+the first session and the stage plots: [docs/benchmark.md](docs/benchmark.md). Raw JSON: [`bench/`](bench).
+
+## Quality
+
+The fast build is not byte-identical to the official pipeline; it is held to the official pipeline's own spread, i.e.
+how far official torch.compile is from official eager. `tools/compare_glb.py` measures the symmetric Chamfer
+distance over the bounding-box diagonal and the base-color L1 (0-255) at matched surface points, against official
+eager:
+
+| image | eager vs eager (run to run) | torch.compile vs eager | CUDA fast vs eager |
 |---|---|---|---|
-| 0a34 | 2.4e-3 / 16.2 | 1.3e-3 / 3.3 | 2.4e-3 / 20.5 |
-| 0e49 | 4.0e-3 / 23.3 | 1.7e-3 / 7.9 | 3.8e-3 / 23.6 |
-| 0f16 | 2.9e-3 / 26.9 | 1.7e-3 / 5.6 | 3.0e-3 / 24.1 |
-| 130c | 4.5e-3 / 25.8 | 0.9e-3 / 4.0 | 4.6e-3 / 26.6 |
-| T.png | 3.0e-3 / 25.2 | 1.6e-3 / 6.1 | 2.8e-3 / 28.7 |
+| 0a34 | 1.0e-3 / 3.1 | 2.2e-3 / 18.5 | 2.1e-3 / 19.5 |
+| 0e49 | 1.4e-3 / 7.1 | 4.0e-3 / 23.3 | 3.6e-3 / 26.4 |
+| 0f16 | 1.4e-3 / 4.8 | 2.8e-3 / 23.7 | 2.7e-3 / 27.3 |
+| 130c | 0.7e-3 / 3.6 | 4.4e-3 / 24.1 | 4.4e-3 / 25.4 |
+| T.png | 1.3e-3 / 5.3 | 2.5e-3 / 27.5 | 2.6e-3 / 26.8 |
 
-(Parity vs eager is nonzero only because CuMesh simplify is nondeterministic run to run.)
+- **Geometry:** Chamfer at or below torch.compile's on three images, 1% above on 130c and 8% above on T.png.
+- **Color:** inside torch.compile's range over the set (18.5-27.5), but above the same image's torch.compile number
+  on 0e49 (+3.1) and 0f16 (+3.6). That comes from the fused DiT kernels (a different but equally valid sample), not
+  from the atlas or WebP changes: with them off, those two images match the previous fast build.
+- **Sampling:** the DiT's teacher-forced error matches the official pipeline's own error when its attention backend
+  is switched from flash_attn to xformers.
 
-Second session, same check against the warm-cache eager GLBs (`bench/compare_v2.txt`). "eager vs eager" is the cold-cache
-eager run against the warm-cache one, i.e. the official pipeline's own run-to-run spread:
+<p align="center">
+  <img src="docs/T_fast.gif" alt="The CUDA fast build's GLB for the T example, rotating" width="384">
+</p>
 
-| Image | eager vs eager | compile vs eager | parity vs eager | fast (before) vs eager | fast vs eager |
-|---|---|---|---|---|---|
-| 0a34 | 1.0e-3 / 3.1 | 2.2e-3 / 18.5 | 1.0e-3 / 3.1 | 2.2e-3 / 20.5 | 2.1e-3 / 19.5 |
-| 0e49 | 1.4e-3 / 7.1 | 4.0e-3 / 23.3 | 1.4e-3 / 7.1 | 3.6e-3 / 23.6 | 3.6e-3 / 26.4 |
-| 0f16 | 1.4e-3 / 4.8 | 2.8e-3 / 23.7 | 1.4e-3 / 4.8 | 2.7e-3 / 24.2 | 2.7e-3 / 27.3 |
-| 130c | 0.7e-3 / 3.6 | 4.4e-3 / 24.1 | 0.7e-3 / 3.6 | 4.5e-3 / 26.6 | 4.4e-3 / 25.4 |
-| T.png | 1.3e-3 / 5.3 | 2.5e-3 / 27.5 | 1.3e-3 / 5.3 | 2.5e-3 / 28.7 | 2.6e-3 / 26.8 |
+## Parity
 
-Chamfer is at or below compile-vs-eager on three images, 1% above it on 130c and 8% above it on T.png. Color L1 is inside the compile-vs-eager
-range over the set (18.5-27.5) but above the same image's compile number on 0e49 (+3.1) and 0f16 (+3.6), and below it on
-T.png. The color differences come from the DiT changes (a different but equally valid sample), not from the atlas or WebP
-changes: with `T2_DIT_FUSE=0 T2_DIT_GELU_EPI=0` the new build gives 23.6 and 24.2 on those two images, the same as the
-previous fast build, with or without the grouped atlas (`bench/compare_ab_v2.txt`). Teacher-forced sampling error
-(`parity sample`, mean abs / max abs for the sparse-structure stage): 0e49 0.0190 / 1.64 before, 0.0179 / 0.92 now;
-0a34 0.0166 / 0.88 before, 0.0170 / 1.50 now. Parity: all 15 checks of `tools/repro_parity.sh` pass on the final tree.
+The parity build exists to show that the port is exact before it is fast. From the input image to the final mesh
+and attributes, and through the GLB writer (texture bake, TELEA inpaint, WebP, glTF bytes), it is bitwise identical
+to the official PyTorch pipeline. The one exception is the vertex-normal buffer: CuMesh accumulates normals with
+atomics, so the official code is nondeterministic there too.
 
-## Cost
-
-HF Jobs compute, from job running time × listed price:
-
-| Job | Flavor | Price | Running | Cost |
-|---|---|---|---|---|
-| `6ac54e95…` (all builds, parity runs, benchmarks) | h200 (1× H200, 23 vCPU) | $5.00/h | 8.4 h | ~$42 |
-| `6ac55477…` (CPU box started while the H200 was queued 43 min) | cpu-performance | $1.90/h | 8.7 h | ~$17 |
-| `6ac5e12c…` + `6ac5e099…` (fresh-container parity reproduction) | h200 | $5.00/h | 58 min | ~$5 |
-| **Total** | | | | **~$64** |
-
-Second session (end-to-end optimizations): `6b04ae01…` h200, 3.9 h, ~$19; `6b04c7df…` rtx-pro-6000 ($2.75/h, sm_120 TELEA
-reproduction and fix check), 0.5 h, ~$1.4.
-
-The benchmarks themselves are a small part of this. One full 4-way pass over the 5 images is about 24 GPU-minutes (~$2).
-Most of the cost is development time on an idle-billing `sleep infinity` job.
-
-Cursor model/API usage is not included. It is not visible from inside the agent; see the Cursor dashboard
-([cursor.com/dashboard](https://cursor.com/dashboard) → Usage) for this session.
-
-## Build and run
-
-Requires CUDA 12.4+, cuDNN 9, CMake ≥ 3.24, Ninja, and an sm_90 GPU (FA3 is sm_90a).
+FlexGEMM chooses sparse-conv tiles by timing them, so its choices (and the fp32 accumulation order) can differ
+between machines. `assets/flexgemm_autotune.json` holds the H200 choices for the five example images; the CUDA build
+reads it, and `tools/repro_parity.sh` points the official pipeline at the same file. On a fresh H200 container that
+script passes all 15 checks (5 images × `pipe`, `glb`, `bake`). A new image or GPU needs one official run first, to
+add its tiles to the cache.
 
 ```bash
-tools/setup_ref.sh                         # official PyTorch reference (parity checks and baselines only)
-tools/build.sh build                       # fetches pinned third-party sources, builds build/t2 and build/parity
-tools/repro_parity.sh build                # official dumps + bitwise checks on the 5 example images
-./build/t2 image.png out.glb [seed]        # parity build
-T2_FAST=1 ./build/t2 image.png out.glb     # fast build
-./build/t2 --bench out.json out_dir img... # timing as in tools/bench_ref.py
+tools/setup_ref.sh             # official PyTorch reference (parity checks and baselines only)
+tools/repro_parity.sh build    # official dumps + bitwise checks on the 5 example images
 ```
 
-Checkpoints are read from `$T2_CKPT` (default `/workspace/ckpts`), as safetensors from `microsoft/TRELLIS.2-4B` and DINOv3.
-Set `T2_PROF=1` for per-stage timing.
+## The Space
 
-**Parity reproducibility.** FlexGEMM autotunes sparse-conv tiles by timing them, so its choices (and hence the fp32
-accumulation order) can differ between machines. `assets/flexgemm_autotune.json` holds the H200 choices for the five
-example images. The CUDA build reads it by default (`$T2_FLEXGEMM_CACHE` overrides), and `tools/repro_parity.sh` points
-the official pipeline at the same file through `FLEX_GEMM_AUTOTUNE_CACHE_PATH`. On a fresh H200 container, that script
-passes all 15 checks: 5 images × `pipe`, `glb` and `bake`. `pipe` and `glb` are bitwise; `bake` is identical except
-the vertex normals. A new image or GPU needs one official run first, to add its tiles to the cache.
+[suvadityamuk/trellis2-cuda](https://huggingface.co/spaces/suvadityamuk/trellis2-cuda) runs on ZeroGPU (a slice of
+an RTX PRO 6000 Blackwell, sm_120). `libt2.so` there is the fast build compiled for sm_120 with FlashAttention-2 in
+place of the Hopper-only FlashAttention-3, loaded with ctypes in a subprocess of the GPU worker: it links the CUDA 12
+runtime and cuDNN, while the official side's torch is CUDA 13 and both cuDNN builds share one soname. The official
+side is the `trellis2` package with the requirements of Microsoft's own
+[TRELLIS.2 Space](https://huggingface.co/spaces/microsoft/TRELLIS.2), run eagerly. Build and assemble it with:
 
-## Layout
+```bash
+T2_CMAKE_ARGS=-DT2_CUDA_ARCH=120 tools/build.sh build120   # CUDA 12.8
+tools/make_space.sh build120 <TRELLIS.2 checkout>
+```
 
-- `src/`: models (DINOv3, flow DiTs, sparse-structure, shape and texture decoders), GEMM/attention/sparse-conv ops, the
-  `to_glb` port (`glb.cu`), OpenCV TELEA (`inpaint.cpp`), and the trimesh/PIL GLB writer (`gltf.cpp`).
-- `apps/parity.cu`: per-stage bitwise checks against dumps from `tools/ref_dump.py`.
-- `tools/`: offline-only Python (reference dumps, official timing, GLB comparison, plots, and renders).
-- `bench/`: raw timings, plus the T.png chart-size and TELEA-level dumps. `docs/`: blog, plots and renders.
-- `assets/flexgemm_autotune.json`: the sparse-conv tile choices shared by both sides for bitwise parity.
-- `hub/trellis2-kernels/`: a standalone [Kernel Hub](https://huggingface.co/docs/kernels) package (Apache-2.0) with
-  two of the kernels written here: `mesh_udf` (GPU linear BVH, point-to-mesh distance, face id and barycentrics) and
-  `telea_inpaint` (the fast build's wavefront TELEA, a GPU alternative to `cv2.inpaint`). It builds with
-  `kernel-builder build-and-copy` for torch 2.13/2.14 × CUDA 12.6/13.0/13.2 and passes its tests on H200.
-- `apps/t2lib.cu`, `space/`: the [ZeroGPU Space](https://huggingface.co/spaces/suvadityamuk/trellis2-cuda), which
-  runs each image through the port and then through the official PyTorch code on the same GPU slice and shows both
-  GLBs and their stage timings side by side (on half an RTX PRO 6000, 1M faces / 4096²: 51 s vs 118 s for T.png,
-  82 s vs 157 s for 0e49). `libt2.so` is the pipeline as a C ABI (`t2_load`, `t2_image_to_glb`, `t2_last_error`)
-  that `space/t2_run.py` loads with ctypes in a subprocess of the `@spaces.GPU` worker. Build it for the
-  Blackwell GPUs behind ZeroGPU with `T2_CMAKE_ARGS=-DT2_CUDA_ARCH=120 tools/build.sh build120` (CUDA 12.8; FA2
-  replaces the Hopper-only FA3), then `tools/make_space.sh build120 <TRELLIS.2 checkout>`. On an RTX PRO 6000 the
-  fast build with `T2_TELEA_GPU=0` (the GPU TELEA faults on sm_120) takes 23-52 s per image at 4096² / 1M faces and
-  stays within the torch.compile-vs-eager spread of the exact build.
-  The sm_120 fault was a ptxas 12.8 miscompile of the TELEA fill kernel at `-O1` and above when its indices are 64-bit
-  (sm_90/sm_100 targets and `-Xptxas -O0` are fine). The kernel now uses 32-bit indices with clamped loads, gives the
-  same bytes on sm_90, and runs on an RTX PRO 6000 (T.png: 74 ms vs 6.5 s for the CPU inpaint). The Space runs a
-  build of this tree with the GPU TELEA on: 10-45 s per example on a full RTX PRO 6000 at 4096² / 1M faces.
+<!-- SPACE_NUMBERS -->
 
-Third-party CUDA code is reused unmodified: flash-attention 2.7.3 (FA2 + FA3), CuMesh, cuBVH, xatlas, FlexGEMM,
-nvdiffrast 0.4.0, cudnn-frontend, cutlass, and libwebp 1.4.0.
+## Limits and what is untested
+
+- **Tested hardware:** the benchmarks and the parity checks ran on one H200 (sm_90). The sm_120 build runs in the
+  Space and was checked on a full RTX PRO 6000; nothing else has been run.
+- **Parity is per machine:** bitwise identity holds on the tested H200 setup with the shared autotune cache. Other
+  GPUs, drivers or library versions can pick other kernels.
+- **Closeness misses:** T.png geometry 8% above torch.compile's distance, and color on 0e49 and 0f16, as above.
+- **Licences of built binaries:** nvdiffrast and parts of cuBVH are under NVIDIA's non-commercial source code
+  licence, so `build/t2`, `build/parity` and `libt2.so` are for non-commercial use. The Kernel Hub package does not
+  use either.
+
+## Development and reproduction
+
+| path | what |
+|---|---|
+| `src/` | models (DINOv3, flow DiTs, sparse-structure, shape and texture decoders), GEMM / attention / sparse-conv ops, the `to_glb` port (`glb.cu`), OpenCV TELEA (`inpaint.cpp`), the glTF writer (`gltf.cpp`), grouped xatlas (`uv_atlas.cpp`) |
+| `apps/` | `t2.cu` (the binary), `parity.cu` (per-stage bitwise checks against dumps from `tools/ref_dump.py`), `t2lib.cu` (the C library) |
+| `tools/` | offline Python: reference dumps, official timing, GLB comparison, plots and renders, build and Space scripts |
+| `bench/` | raw timings and comparison outputs |
+| `assets/` | `flexgemm_autotune.json`, the sparse-conv tile choices shared by both sides |
+| `hub/trellis2-kernels/` | the Kernel Hub package (`mesh_udf`, `telea_inpaint`), Apache-2.0 |
+| `space/` | the Gradio Space |
+| `docs/` | worklog, benchmark details, plots, renders |
 
 ## Related
 
@@ -221,3 +297,15 @@ Part of [TRELLIS.2 everywhere](https://huggingface.co/collections/hugging-3d/tre
 | NVIDIA (CUDA C++) | [kernels](https://huggingface.co/kernels/suvadityamuk/trellis2-cuda) · [Space](https://huggingface.co/spaces/suvadityamuk/trellis2-cuda) | [trellis2-cuda](https://github.com/suvadityamuk/trellis2-cuda) |
 | Apple Silicon (Metal) | [kernels](https://huggingface.co/kernels/suvadityamuk/trellis2-metal) | [trellis2-metal](https://github.com/suvadityamuk/trellis2-metal) |
 | AMD (ROCm/HIP) | [kernels](https://huggingface.co/kernels/suvadityamuk/trellis2-rocm) | [trellis2-rocm](https://github.com/suvadityamuk/trellis2-rocm) |
+
+## Credits
+
+- [TRELLIS.2](https://github.com/microsoft/TRELLIS.2) by Microsoft (MIT): the pipeline, model architectures and
+  post-processing reproduced here. Example images are from its repository.
+- Reused CUDA code, fetched by `tools/build.sh` and not redistributed: flash-attention 2.7.3, CuMesh, cuBVH, xatlas,
+  FlexGEMM, nvdiffrast 0.4.0, cudnn-frontend, cutlass, libwebp 1.4.0. `src/inpaint.cpp` ports OpenCV's TELEA
+  (Apache-2.0). See [NOTICE](NOTICE).
+- Packaging for the Kernel Hub with [kernel-builder](https://github.com/huggingface/kernels).
+- README layout after [idol-mlx](https://github.com/cfahlgren1/idol-mlx).
+
+Licence: Apache-2.0 ([LICENSE](LICENSE)); built binaries are additionally subject to the NVIDIA licences above.

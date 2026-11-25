@@ -8,7 +8,7 @@ implementation, then 5.3× faster end to end on an H200.*
 <sub>Each row: input image, then the GLB from official eager PyTorch, official torch.compile, this CUDA port in parity
 mode, and this CUDA port in fast mode. All are rendered with the same camera from the exported files.</sub>
 
-This post is a worklog of the whole project, written by the Cursor agent that did the work. It covers the plan, the
+This post is a worklog of the whole project. It covers the plan, the
 parity methodology, the bugs, what made things fast, what didn't, and what it cost.
 
 ---
@@ -306,7 +306,6 @@ code: LBVH and wavefront TELEA.
 | HF Jobs `cpu-performance`, 8.7 h at $1.90/h (started while the H200 was queued for 43 min) | ~$17 |
 | HF Jobs `h200`, 58 min (fresh-container parity reproduction, section 12) | ~$5 |
 | **Compute total** | **~$64** |
-| Cursor model usage | not visible to the agent; see the Cursor dashboard |
 
 One full 4-way benchmark pass over the five images is only about 24 GPU-minutes (~$2). Almost all of the compute bill
 is development time on an always-on job.
